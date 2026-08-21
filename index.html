@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PROMPT MASTER — ฝึกออกแบบพรอมต์ให้เชี่ยวชาญ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F7F4;
+    --bg-alt:#FFFFFF;
+    --ink:#0E1B2E;
+    --ink-soft:#3B4B60;
+    --teal:#22BEC1;
+    --teal-dark:#128689;
+    --teal-tint:rgba(34,190,193,0.10);
+    --teal-tint-strong:rgba(34,190,193,0.18);
+    --border:#E4E2DA;
+    --muted:#6B7280;
+    --faint:#9AA1AC;
+    --danger:#E15347;
+    --danger-tint:rgba(225,83,71,0.08);
+    --success:#279C6B;
+    --purple:#7C6FE0;
+    --pink:#E0608E;
+    --font-th:'IBM Plex Sans Thai', sans-serif;
+    --font-disp:'Poppins', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+    --shadow-sm:0 1px 2px rgba(14,27,46,0.04), 0 1px 1px rgba(14,27,46,0.03);
+    --shadow-md:0 8px 24px rgba(14,27,46,0.07);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-th);
+    line-height:1.65;
+    min-height:100vh;
+    padding-bottom:70px;
+    position:relative;
+  }
+  body::before{
+    content:'';
+    position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      radial-gradient(560px circle at 6% -6%, rgba(34,190,193,0.18), transparent 60%),
+      radial-gradient(480px circle at 104% 6%, rgba(224,96,142,0.13), transparent 58%),
+      radial-gradient(620px circle at 92% 104%, rgba(124,111,224,0.15), transparent 62%),
+      radial-gradient(420px circle at -4% 96%, rgba(39,156,107,0.10), transparent 55%),
+      radial-gradient(rgba(14,27,46,0.05) 1px, transparent 1px);
+    background-size:auto, auto, auto, auto, 28px 28px;
+  }
+  ::selection{background:var(--teal); color:#fff;}
+  a{color:var(--teal-dark);}
+
+  /* ---------- big background mascot ---------- */
+  .bg-mascot{
+    position:fixed; right:-46px; bottom:-18px; z-index:-1;
+    width:340px; height:auto; pointer-events:none;
+    filter:drop-shadow(0 14px 26px rgba(14,27,46,0.12));
+    animation:botBob 3.6s ease-in-out infinite;
+    transform-origin:center bottom;
+  }
+  @keyframes botBob{
+    0%,100%{transform:translateY(0) rotate(0deg);}
+    50%{transform:translateY(-8px) rotate(-1deg);}
+  }
+  .mascot-eye{transform-box:fill-box; transform-origin:center; animation:botBlink 5.5s ease-in-out infinite;}
+  .mascot-eye.eye-r{animation-delay:.05s;}
+  @keyframes botBlink{
+    0%, 92%, 100%{transform:scaleY(1);}
+    95%{transform:scaleY(0.12);}
+  }
+  .mascot-mouth{transition:opacity .08s linear;}
+  .mouth-open{opacity:0;}
+  .bg-mascot.talking .mouth-closed{animation:mouthFlapA .26s steps(1,end) infinite;}
+  .bg-mascot.talking .mouth-open{animation:mouthFlapB .26s steps(1,end) infinite;}
+  @keyframes mouthFlapA{0%,100%{opacity:1;} 50%{opacity:0;}}
+  @keyframes mouthFlapB{0%,100%{opacity:0;} 50%{opacity:1;}}
+  @media (max-width:1000px){
+    .bg-mascot{width:220px; right:-40px; bottom:-10px; opacity:0.9;}
+  }
+  @media (max-width:680px){
+    .bg-mascot{display:none;}
+  }
+
+  /* ---------- chatbot widget ---------- */
+  .bot-fab{
+    position:fixed; right:24px; bottom:24px; z-index:70;
+    width:60px; height:60px; border-radius:50%;
+    background:linear-gradient(160deg,#2FD1D4,#128689);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; border:none; box-shadow:0 10px 24px rgba(18,134,137,0.35);
+    transition:transform .15s ease;
+  }
+  .bot-fab:hover{transform:scale(1.06);}
+  .bot-fab .ping{
+    position:absolute; inset:0; border-radius:50%;
+    box-shadow:0 0 0 0 rgba(34,190,193,0.5); animation:botPing 2.2s ease-out infinite;
+  }
+  @keyframes botPing{
+    0%{box-shadow:0 0 0 0 rgba(34,190,193,0.45);}
+    70%{box-shadow:0 0 0 16px rgba(34,190,193,0);}
+    100%{box-shadow:0 0 0 0 rgba(34,190,193,0);}
+  }
+  .bot-hint{
+    position:fixed; right:92px; bottom:34px; z-index:69;
+    background:var(--ink); color:#fff; font-size:12.5px; font-weight:600;
+    padding:9px 14px; border-radius:100px 100px 4px 100px; white-space:nowrap;
+    box-shadow:var(--shadow-md); animation:hintFade 6s ease forwards;
+  }
+  @keyframes hintFade{0%{opacity:0; transform:translateX(6px);} 10%{opacity:1; transform:translateX(0);} 85%{opacity:1;} 100%{opacity:0; visibility:hidden;}}
+  @media (max-width:520px){ .bot-hint{display:none;} }
+
+  .bot-chat-panel{
+    position:fixed; right:20px; bottom:96px; z-index:70;
+    width:min(340px,88vw); max-height:min(480px,70vh);
+    background:var(--bg-alt); border:1px solid var(--border); border-radius:18px;
+    box-shadow:var(--shadow-md); display:none; flex-direction:column; overflow:hidden;
+  }
+  .bot-chat-panel.show{display:flex; animation:fadeIn .2s ease;}
+  .bot-chat-head{
+    display:flex; align-items:center; gap:10px; padding:12px 14px;
+    background:linear-gradient(135deg,#2FD1D4,#128689); color:#fff; flex-shrink:0;
+  }
+  .bot-chat-head b{font-family:var(--font-disp); font-size:13.5px; display:block;}
+  .bot-chat-head span{font-size:11px; opacity:0.85;}
+  .bot-chat-close{margin-left:auto; background:rgba(255,255,255,0.2); border:none; color:#fff; width:26px; height:26px; border-radius:50%; cursor:pointer; font-size:13px;}
+  .bot-msgs{flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; font-size:13px;}
+  .bot-msg{max-width:85%; padding:9px 12px; border-radius:14px; line-height:1.55; white-space:pre-wrap;}
+  .bot-msg.bot{align-self:flex-start; background:var(--teal-tint); color:var(--ink); border-bottom-left-radius:4px;}
+  .bot-msg.user{align-self:flex-end; background:var(--ink); color:#fff; border-bottom-right-radius:4px;}
+  .bot-quick{display:flex; flex-wrap:wrap; gap:6px; padding:0 14px 10px;}
+  .bot-quick button{
+    background:var(--bg); border:1px solid var(--border); color:var(--teal-dark);
+    font-size:11.5px; font-weight:600; padding:6px 11px; border-radius:100px; cursor:pointer;
+  }
+  .bot-quick button:hover{border-color:var(--teal);}
+  .bot-input-row{display:flex; gap:8px; padding:10px; border-top:1px solid var(--border); flex-shrink:0;}
+  .bot-input-row input{
+    flex:1; border:1px solid var(--border); border-radius:100px; padding:9px 14px;
+    font-family:var(--font-th); font-size:13px; background:var(--bg);
+  }
+  .bot-input-row input:focus{outline:none; border-color:var(--teal);}
+  .bot-send{
+    background:var(--ink); color:#fff; border:none; border-radius:50%;
+    width:36px; height:36px; flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    background:rgba(247,247,244,0.9);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
+    padding:14px 24px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    flex-wrap:wrap;
+  }
+  .brand{display:flex; align-items:center; gap:11px;}
+  .brand-text{display:flex; flex-direction:column; line-height:1.15;}
+  .brand-text b{
+    font-family:var(--font-disp); font-weight:800; font-size:16px; letter-spacing:0.5px;
+  }
+  .brand-text b .m{color:var(--teal-dark);}
+  .brand-text span{font-size:10px; color:var(--faint); font-family:var(--font-disp); letter-spacing:1.2px; text-transform:uppercase;}
+
+  .tabs{display:flex; gap:4px; background:var(--bg-alt); padding:4px; border-radius:11px; border:1px solid var(--border); box-shadow:var(--shadow-sm);}
+  .tab-btn{
+    appearance:none; border:none; background:transparent; color:var(--muted);
+    font-family:var(--font-th); font-size:13.5px; font-weight:600;
+    padding:9px 16px; border-radius:8px; cursor:pointer; transition:all .18s ease;
+    white-space:nowrap;
+  }
+  .tab-btn:hover{color:var(--ink);}
+  .tab-btn.active{background:var(--ink); color:#fff;}
+
+  .journal-btn{
+    display:flex; align-items:center; gap:7px;
+    background:var(--bg-alt); border:1px solid var(--border); box-shadow:var(--shadow-sm);
+    color:var(--ink); font-family:var(--font-th); font-weight:600; font-size:13px;
+    padding:9px 14px; border-radius:9px; cursor:pointer;
+  }
+  .journal-btn:hover{border-color:var(--teal);}
+  .badge-count{
+    background:var(--teal); color:#fff; font-family:var(--font-disp); font-weight:700;
+    font-size:11px; min-width:18px; height:18px; border-radius:9px; display:flex; align-items:center; justify-content:center; padding:0 5px;
+  }
+  .mastery-pill{
+    display:flex; align-items:center; gap:6px;
+    font-family:var(--font-disp); font-weight:700; font-size:11px; letter-spacing:.4px;
+    color:var(--teal-dark); background:var(--teal-tint); border:1px solid rgba(34,190,193,0.3);
+    padding:6px 12px; border-radius:100px;
+  }
+
+  .wrap{max-width:980px; margin:0 auto; padding:0 20px;}
+
+  /* ---------- hero ---------- */
+  .hero{padding:56px 0 26px; text-align:center; position:relative; overflow:hidden;}
+  .hero-deco{position:absolute; inset:-20px 0 auto 0; height:280px; z-index:-1; opacity:0.9;}
+  .hero-mark{margin-bottom:18px; display:flex; justify-content:center;}
+  .hero .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:var(--font-disp); font-size:11.5px; letter-spacing:1.6px; text-transform:uppercase;
+    color:var(--teal-dark); background:var(--teal-tint); border:1px solid rgba(34,190,193,0.28);
+    padding:6px 14px; border-radius:100px; margin-bottom:20px;
+  }
+  .hero h1{
+    font-family:var(--font-th); font-weight:700; font-size:clamp(24px,4vw,38px);
+    margin:0 0 14px; letter-spacing:-0.2px; color:var(--ink);
+  }
+  .hero h1 .accent{color:var(--teal-dark);}
+  .hero p{color:var(--muted); font-size:15px; max-width:540px; margin:0 auto;}
+
+  /* mastery meter */
+  .meter-wrap{max-width:560px; margin:34px auto 6px;}
+  .meter-track{
+    position:relative; height:8px; border-radius:100px; background:var(--border); overflow:hidden;
+  }
+  .meter-fill{
+    position:absolute; left:0; top:0; height:100%; border-radius:100px;
+    background:linear-gradient(90deg, var(--teal), var(--teal-dark));
+    width:6%; transition:width .5s ease;
+  }
+  .meter-labels{display:flex; justify-content:space-between; margin-top:8px; font-size:11px; font-family:var(--font-disp); font-weight:600; letter-spacing:.3px; color:var(--faint);}
+  .meter-labels .on{color:var(--teal-dark);}
+
+  /* ---------- domain legend ---------- */
+  .legend{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:24px 0 8px;}
+  .legend-chip{
+    display:flex; align-items:center; gap:6px;
+    font-size:11.5px; font-weight:600; padding:6px 11px; border-radius:100px;
+    border:1px solid var(--border); color:var(--muted); background:var(--bg-alt);
+  }
+  .dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
+
+  /* ---------- panels ---------- */
+  .panel{display:none; animation:fadeIn .3s ease;}
+  .panel.active{display:block;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+  .section-title{
+    font-size:11.5px; font-family:var(--font-disp); font-weight:700; letter-spacing:1.4px; text-transform:uppercase;
+    color:var(--faint); margin:40px 0 14px; display:flex; align-items:center; gap:10px;
+  }
+  .section-title::before{
+    content:''; flex-shrink:0; width:9px; height:9px; background:var(--teal);
+    transform:rotate(45deg); border-radius:2px;
+  }
+  .section-title::after{content:''; flex:1; height:1px; background:var(--border);}
+
+  .card{
+    background:var(--bg-alt); border:1px solid var(--border); border-radius:14px; padding:22px; box-shadow:var(--shadow-sm);
+  }
+
+  /* learn tab */
+  .puzzle-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; margin-top:16px;}
+  .puzzle-piece{
+    background:var(--bg-alt); border:1px solid var(--border); border-radius:14px; padding:18px;
+    box-shadow:var(--shadow-sm); transition:box-shadow .2s, transform .2s;
+  }
+  .puzzle-piece:hover{box-shadow:var(--shadow-md); transform:translateY(-2px);}
+  .puzzle-piece .num{
+    font-family:var(--font-disp); font-size:24px; font-weight:800; color:var(--teal); opacity:.55;
+  }
+  .puzzle-piece h3{margin:6px 0 6px; font-size:16px; color:var(--ink);}
+  .puzzle-piece p{margin:0; color:var(--muted); font-size:13.5px;}
+  .puzzle-piece .ex{
+    margin-top:10px; font-family:var(--font-mono); font-size:11.5px; color:var(--teal-dark);
+    background:var(--teal-tint); border:1px dashed rgba(34,190,193,0.35); border-radius:8px; padding:8px 10px;
+  }
+
+  .flow-demo{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:16px;}
+  .flow-step{
+    background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:12px 14px;
+    font-size:13px; flex:1; min-width:170px; color:var(--ink-soft);
+  }
+  .flow-step b{display:block; color:var(--purple); font-size:11px; margin-bottom:4px; font-family:var(--font-disp); letter-spacing:.5px; text-transform:uppercase;}
+  .flow-arrow{color:var(--faint); font-size:18px;}
+
+  /* technique recipe cards (Learn tab) */
+  .tech-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; margin-top:16px;}
+  .tech-card{background:var(--bg-alt); border:1px solid var(--border); border-radius:14px; padding:18px; box-shadow:var(--shadow-sm);}
+  .tech-head{display:flex; align-items:center; gap:9px; margin-bottom:6px;}
+  .tech-head .tech-icon{font-size:21px;}
+  .tech-head h3{margin:0; font-size:15px; color:var(--ink);}
+  .tech-card .tech-desc{margin:0 0 12px; font-size:12.5px; color:var(--muted); line-height:1.5;}
+  .tech-compare{display:flex; align-items:stretch; gap:8px; flex-wrap:wrap;}
+  .tech-box{flex:1; min-width:140px; border-radius:10px; padding:9px 11px; font-size:11.5px; font-family:var(--font-mono); line-height:1.5;}
+  .tech-box .tag{display:block; font-family:var(--font-disp); font-size:9.5px; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; opacity:.85;}
+  .tech-box.weak{background:var(--danger-tint); border:1px dashed rgba(225,83,71,0.35); color:var(--danger);}
+  .tech-box.strong{background:var(--teal-tint); border:1px dashed rgba(34,190,193,0.35); color:var(--teal-dark);}
+  .tech-arrow{align-self:center; color:var(--faint); font-size:16px; flex-shrink:0;}
+
+  /* techniques tab: live compare (Approach A) */
+  .tech-tabs{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:14px 0 22px;}
+  .tech-tab-btn{
+    display:flex; align-items:center; gap:6px;
+    background:var(--bg-alt); border:2px solid var(--border); border-radius:100px;
+    padding:10px 15px; font-family:var(--font-th); font-size:13px; font-weight:700; color:var(--ink-soft);
+    cursor:pointer; transition:all .15s ease; box-shadow:var(--shadow-sm);
+  }
+  .tech-tab-btn span:first-child{font-size:15px;}
+  .tech-tab-btn:hover{border-color:var(--teal); transform:translateY(-2px); box-shadow:var(--shadow-md);}
+  .tech-tab-btn.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+
+  .acronym-head{text-align:center; margin-bottom:16px;}
+  .acronym-big{
+    font-family:var(--font-disp); font-weight:800; font-size:44px; letter-spacing:6px;
+    line-height:1.1; margin-bottom:8px;
+  }
+  .acronym-letters{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; margin:0 auto 4px; max-width:900px;
+  }
+  .acronym-letter{
+    display:flex; align-items:flex-start; gap:10px;
+    background:var(--bg-alt); border:1px solid var(--border); border-radius:12px; padding:12px 14px; box-shadow:var(--shadow-sm);
+  }
+  .al-badge{
+    flex-shrink:0; width:32px; height:32px; border-radius:9px; color:#fff;
+    display:flex; align-items:center; justify-content:center; font-family:var(--font-disp); font-weight:800; font-size:15px;
+  }
+  .acronym-letter b{display:block; font-family:var(--font-disp); font-size:13px; color:var(--ink); margin-bottom:2px;}
+  .acronym-letter span{font-size:12px; color:var(--muted); line-height:1.5;}
+
+  .compare-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media (max-width:760px){.compare-grid{grid-template-columns:1fr;}}
+  .compare-col{background:var(--bg-alt); border:1px solid var(--border); border-radius:14px; padding:18px; box-shadow:var(--shadow-sm);}
+  .compare-col.weak{border-top:4px solid var(--danger);}
+  .compare-col.strong{border-top:4px solid var(--teal);}
+  .compare-col-label{
+    font-family:var(--font-disp); font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
+    margin-bottom:10px; display:flex; align-items:center; gap:6px;
+  }
+  .compare-col.weak .compare-col-label{color:var(--danger);}
+  .compare-col.strong .compare-col-label{color:var(--teal-dark);}
+  .compare-result{
+    margin-top:12px; min-height:40px; font-size:13px; color:var(--ink-soft); line-height:1.6;
+    white-space:pre-wrap; background:var(--bg); border-radius:10px; padding:12px; border:1px solid var(--border);
+  }
+
+  /* workshop */
+  .altar{
+    position:relative;
+    background:var(--bg-alt); border:1px solid var(--border); border-radius:16px; padding:26px; margin-top:16px; box-shadow:var(--shadow-sm);
+  }
+  .altar::before{
+    content:''; position:absolute; top:-30px; right:-30px; width:140px; height:140px; z-index:-1;
+    background:radial-gradient(circle, rgba(34,190,193,0.16), transparent 70%);
+  }
+  .slot-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media(max-width:640px){.slot-grid{grid-template-columns:1fr;}}
+  .slot label{
+    display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; margin-bottom:7px;
+    color:var(--ink-soft); font-family:var(--font-disp); letter-spacing:.4px; text-transform:uppercase;
+  }
+  .slot input, .slot textarea, .slot select{
+    width:100%; background:var(--bg); border:1px solid var(--border); border-radius:9px;
+    color:var(--ink); font-family:var(--font-th); font-size:14px; padding:11px 13px;
+    resize:vertical; transition:border-color .2s, background .2s;
+  }
+  .slot input:focus, .slot textarea:focus, .slot select:focus{outline:none; border-color:var(--teal); background:#fff;}
+
+  .preview-box{
+    margin-top:18px; background:var(--ink); border:1px solid var(--ink); border-radius:12px;
+    padding:16px 18px; font-family:var(--font-mono); font-size:13px; color:#DFF6F6;
+    min-height:44px; white-space:pre-wrap; word-break:break-word;
+  }
+  .preview-label{font-family:var(--font-disp); font-size:10.5px; letter-spacing:1px; color:var(--teal); text-transform:uppercase; margin-bottom:8px; font-weight:700;}
+
+  .cast-row{display:flex; gap:12px; margin-top:18px; align-items:center; flex-wrap:wrap;}
+  .btn-primary{
+    appearance:none; border:none; cursor:pointer; font-family:var(--font-th); font-weight:700; font-size:14.5px;
+    padding:13px 24px; border-radius:10px; color:#fff;
+    background:var(--ink);
+    box-shadow:0 4px 14px rgba(14,27,46,0.18);
+    transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
+    display:flex; align-items:center; gap:8px;
+  }
+  .btn-primary:hover{background:var(--teal-dark); transform:translateY(-1px); box-shadow:0 6px 18px rgba(18,134,137,0.3);}
+  .btn-primary:disabled{opacity:.5; cursor:not-allowed; transform:none;}
+  .btn-secondary{
+    appearance:none; cursor:pointer; font-family:var(--font-th); font-weight:600; font-size:13.5px;
+    padding:11px 18px; border-radius:9px; color:var(--ink);
+    background:var(--bg-alt); border:1px solid var(--border);
+  }
+  .btn-secondary:hover{border-color:var(--teal); color:var(--teal-dark);}
+  .btn-ghost{
+    appearance:none; cursor:pointer; font-family:var(--font-th); font-weight:600; font-size:12.5px;
+    padding:6px 12px; border-radius:8px; color:var(--muted); background:transparent; border:1px solid var(--border);
+  }
+  .btn-ghost:hover{color:var(--teal-dark); border-color:var(--teal);}
+
+  .hint{font-size:12px; color:var(--faint);}
+
+  .result-card{
+    margin-top:18px; border-radius:14px; padding:20px; background:var(--bg-alt);
+    border:1px solid var(--border); border-left:3px solid var(--teal); display:none;
+  }
+  .result-card.show{display:block; animation:fadeIn .35s ease;}
+  .result-head{display:flex; align-items:center; gap:8px; margin-bottom:10px; color:var(--teal-dark); font-family:var(--font-disp); font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase;}
+  .result-text{font-size:14.5px; white-space:pre-wrap; color:var(--ink);}
+  .loading-line{display:flex; align-items:center; gap:10px; color:var(--muted); font-size:13.5px;}
+  .spinner{width:16px; height:16px; border-radius:50%; border:2px solid var(--border); border-top-color:var(--teal); animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .followup-row{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;}
+  .followup-row input{flex:1; min-width:200px; background:var(--bg); border:1px solid var(--border); border-radius:9px; color:var(--ink); padding:10px 13px; font-family:var(--font-th); font-size:13.5px;}
+  .followup-row input:focus{outline:none; border-color:var(--teal);}
+
+  .save-row{display:flex; align-items:center; gap:10px; margin-top:16px; flex-wrap:wrap;}
+  .rating-btns{display:flex; gap:6px;}
+  .rating-btns button{
+    background:var(--bg); border:1px solid var(--border); color:var(--muted);
+    padding:7px 13px; border-radius:8px; font-family:var(--font-th); font-size:12.5px; cursor:pointer;
+  }
+  .rating-btns button.picked{border-color:var(--success); color:var(--success); background:rgba(39,156,107,0.08);}
+
+  /* domain badges */
+  .scenario-row{display:flex; align-items:center; gap:10px; margin:10px 0 4px;}
+  .dice-btn{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--teal-tint); color:var(--teal-dark); border:1px solid rgba(34,190,193,0.35);
+    border-radius:999px; padding:7px 14px; font-family:var(--font-th); font-size:13px; font-weight:600;
+    cursor:pointer; transition:background .15s ease;
+  }
+  .dice-btn:hover{background:var(--teal-tint-strong);}
+  .dice-btn-lg{
+    padding:16px 28px; font-size:16px; font-weight:700; gap:10px;
+    background:linear-gradient(135deg,#2FD1D4,#128689); color:#fff; border:none;
+    box-shadow:0 10px 24px rgba(18,134,137,0.32); transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .dice-btn-lg:hover{transform:translateY(-2px); box-shadow:0 14px 28px rgba(18,134,137,0.4);}
+  .dice-btn-lg .emoji{font-size:22px;}
+  .scenario-box{
+    display:none; align-items:flex-start; gap:10px;
+    background:var(--bg-alt); border:1px dashed var(--teal); border-radius:12px;
+    padding:12px 14px; margin:4px 0 14px; font-size:13.5px;
+  }
+  .scenario-box.show{display:flex;}
+  .scenario-box .scn-icon{font-size:22px; line-height:1;}
+  .scenario-box b{font-family:var(--font-disp); font-size:13.5px; color:var(--ink);}
+  .scenario-box p{margin:3px 0 0; color:var(--muted); line-height:1.5;}
+
+  .dbadge{
+    display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:700;
+    padding:4px 9px; border-radius:100px; border:1px solid var(--border); margin-right:6px; margin-bottom:6px;
+    background:var(--bg-alt);
+  }
+  .ctxbadge{
+    display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:700;
+    padding:4px 9px 4px 8px; border-radius:6px; margin-right:6px; margin-bottom:6px;
+    background:var(--ink); color:#fff;
+  }
+  .ctxbadge .ic{font-size:11px;}
+
+  .ctx-intro{text-align:center; margin:6px 0 14px;}
+  .ctx-hint-big{
+    font-family:var(--font-disp); font-size:17px; font-weight:700; color:var(--ink); margin-bottom:4px;
+  }
+  .ctx-select{
+    display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin:14px 0 4px;
+  }
+  .ctx-chip{
+    display:flex; align-items:center; gap:6px;
+    background:var(--bg-alt); border:2px solid var(--border); border-radius:100px;
+    padding:10px 15px; font-family:var(--font-th); font-size:13px; font-weight:700; color:var(--ink-soft);
+    cursor:pointer; transition:all .15s ease; box-shadow:var(--shadow-sm);
+  }
+  .ctx-chip span{font-size:15px;}
+  .ctx-chip:hover{border-color:var(--teal); transform:translateY(-2px); box-shadow:var(--shadow-md);}
+  .ctx-chip.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+  .ctx-hint{font-size:12.5px; color:var(--muted); margin:0 0 2px; text-align:center;}
+  .assess-tag{
+    display:inline-block; font-family:var(--font-disp); font-size:10.5px; font-weight:700;
+    letter-spacing:.6px; text-transform:uppercase; color:var(--pink);
+    background:rgba(224,96,142,0.1); border:1px solid rgba(224,96,142,0.3);
+    padding:3px 9px; border-radius:100px; margin-bottom:6px;
+  }
+  .rubric{
+    margin:16px 0 4px; padding:14px 16px; background:var(--bg); border:1px solid var(--border); border-radius:12px;
+  }
+  .rubric-title{font-family:var(--font-disp); font-size:11.5px; font-weight:700; letter-spacing:.4px; color:var(--ink-soft); margin-bottom:8px; text-transform:uppercase;}
+  .rubric-item{display:flex; align-items:flex-start; gap:9px; font-size:13px; color:var(--ink-soft); padding:5px 0;}
+  .rubric-item input{margin-top:3px; width:16px; height:16px; accent-color:var(--teal-dark); flex-shrink:0; cursor:pointer;}
+  .rubric-item label{cursor:pointer;}
+
+  /* ---------- domain tabs & level path ---------- */
+  .domain-intro{text-align:center; margin:6px 0 16px;}
+  .domain-hint-big{font-family:var(--font-disp); font-size:17px; font-weight:700; color:var(--ink); margin-bottom:4px;}
+  .domain-hint-sub{font-size:12.5px; color:var(--muted);}
+  .domain-tabs{
+    display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:14px 0 4px;
+  }
+  .domain-tab{
+    display:flex; align-items:center; gap:6px;
+    background:var(--bg-alt); border:2px solid var(--border); border-radius:100px;
+    padding:10px 15px; font-family:var(--font-th); font-size:13px; font-weight:700; color:var(--ink-soft);
+    cursor:pointer; transition:all .15s ease; box-shadow:var(--shadow-sm);
+  }
+  .domain-tab span:first-child{font-size:15px;}
+  .domain-tab:hover{border-color:var(--teal); transform:translateY(-2px); box-shadow:var(--shadow-md);}
+  .domain-tab.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+  .domain-tab .dt-count{font-size:11px; opacity:.8; font-weight:600;}
+
+  .domain-progress{font-size:12px; color:var(--muted); margin-bottom:18px;}
+  .domain-progress-bar{height:6px; border-radius:100px; background:var(--border); overflow:hidden; margin-top:6px;}
+  .domain-progress-fill{height:100%; background:linear-gradient(90deg,#22BEC1,#7C6FE0); border-radius:100px; transition:width .3s ease;}
+
+  .level-path-wrap{display:flex; gap:14px; overflow-x:auto; padding:10px 4px 20px; margin-bottom:4px;}
+  .level-node{flex-shrink:0; width:62px; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer;}
+  .level-node .circle{
+    width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-disp); font-weight:700; font-size:16px; border:2px solid var(--border);
+    background:var(--bg-alt); color:var(--faint); transition:all .15s ease;
+  }
+  .level-node.locked{cursor:not-allowed;}
+  .level-node.locked .circle{color:var(--faint); background:var(--bg);}
+  .level-node.unlocked .circle{border-color:var(--teal); color:var(--teal-dark); box-shadow:0 0 0 4px rgba(34,190,193,0.12);}
+  .level-node.completed .circle{background:var(--teal-dark); border-color:var(--teal-dark); color:#fff;}
+  .level-node.active .circle{transform:scale(1.12); box-shadow:0 0 0 5px rgba(34,190,193,0.22);}
+  .level-node .lv-label{font-size:10px; color:var(--muted); text-align:center; line-height:1.3;}
+
+  .level-panel{display:none;}
+  .level-panel.show{display:block; animation:fadeIn .2s ease;}
+  .tier-badge{
+    display:inline-block; font-family:var(--font-disp); font-size:10.5px; font-weight:700; letter-spacing:.5px;
+    padding:3px 10px; border-radius:100px; margin-right:6px;
+  }
+  .tier-easy{background:rgba(39,156,107,0.12); color:var(--success);}
+  .tier-medium{background:rgba(224,96,142,0.12); color:var(--pink);}
+  .tier-hard{background:rgba(14,27,46,0.1); color:var(--ink);}
+
+  /* stages (missions) */
+  .mission-intro{
+    display:flex; align-items:center; gap:20px;
+    background:linear-gradient(135deg, var(--teal-tint) 0%, rgba(124,111,224,0.08) 100%);
+    border:1px solid var(--border); border-radius:18px;
+    padding:18px 22px; margin-bottom:22px;
+  }
+  .mission-intro .mascot{flex-shrink:0; width:88px; height:88px;}
+  .mission-intro .intro-text b{
+    display:block; font-family:var(--font-disp); font-size:16px; color:var(--ink); margin-bottom:3px;
+  }
+  .mission-intro .intro-text span{font-size:13px; color:var(--muted);}
+  .mission-icon{
+    flex-shrink:0; width:38px; height:38px; border-radius:11px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--bg-alt); border:1px solid var(--border);
+  }
+  @media (max-width:520px){
+    .mission-intro{flex-direction:column; text-align:center;}
+  }
+
+  .mission-card{
+    background:var(--bg-alt); border:1px solid var(--border); border-radius:16px; padding:22px; margin-bottom:18px; box-shadow:var(--shadow-sm);
+  }
+  .stage-num{
+    width:34px; height:34px; border-radius:9px; background:var(--ink); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-family:var(--font-disp); font-weight:800; font-size:14px;
+    flex-shrink:0;
+  }
+  .mission-head{display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap; margin-bottom:8px;}
+  .mission-head-left{display:flex; gap:12px; align-items:flex-start;}
+  .mission-head h3{margin:0; font-size:17px; color:var(--ink);}
+  .mission-desc{color:var(--muted); font-size:13.5px; margin:8px 0 16px;}
+  .mission-body{display:none; margin-top:16px; border-top:1px solid var(--border); padding-top:16px;}
+  .mission-body.show{display:block;}
+
+  .reflect-grid{display:grid; grid-template-columns:1fr; gap:12px; margin-top:14px;}
+  .reflect-item label{display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:6px;}
+  .reflect-item textarea{width:100%; background:var(--bg); border:1px solid var(--border); border-radius:9px; color:var(--ink); font-family:var(--font-th); font-size:13.5px; padding:10px 12px; min-height:56px;}
+
+  .attempt-list{display:flex; flex-direction:column; gap:10px; margin-top:16px;}
+  .attempt-item{background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:12px 14px; font-size:12.5px;}
+  .attempt-item .p-line{font-family:var(--font-mono); color:var(--teal-dark); margin-bottom:6px; font-size:11.5px;}
+  .attempt-item .r-line{color:var(--muted); max-height:70px; overflow:hidden;}
+
+  /* danger card */
+  .danger-card{border-color:rgba(225,83,71,0.3); background:var(--danger-tint);}
+
+  /* journal drawer */
+  .drawer-overlay{
+    position:fixed; inset:0; background:rgba(14,27,46,0.35);
+    display:none; z-index:90;
+  }
+  .drawer-overlay.show{display:block;}
+  .drawer{
+    position:fixed; top:0; right:0; height:100%; width:min(420px, 92vw);
+    background:var(--bg-alt); border-left:1px solid var(--border);
+    z-index:100; transform:translateX(100%); transition:transform .3s ease;
+    padding:24px; overflow-y:auto;
+  }
+  .drawer.show{transform:translateX(0);}
+  .drawer h2{font-size:18px; margin:0 0 4px; font-family:var(--font-th); color:var(--ink);}
+  .drawer .sub{color:var(--faint); font-size:12.5px; margin-bottom:20px;}
+  .journal-entry{background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:12px;}
+  .journal-entry .je-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+  .journal-entry .je-tag{font-size:10.5px; color:var(--purple); font-family:var(--font-disp); letter-spacing:.5px; font-weight:700;}
+  .journal-entry .je-prompt{font-family:var(--font-mono); font-size:11.5px; color:var(--teal-dark); margin-bottom:6px;}
+  .journal-entry .je-note{font-size:12.5px; color:var(--muted);}
+  .empty-journal{text-align:center; color:var(--faint); font-size:13px; margin-top:60px;}
+  .drawer-close{position:absolute; top:20px; right:20px; background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer;}
+
+  footer{max-width:980px; margin:60px auto 0; padding:20px; text-align:center; color:var(--faint); font-size:12px;}
+</style>
+</head>
+<body>
+
+<svg id="bgMascot" class="bg-mascot" viewBox="0 0 340 440" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs>
+    <linearGradient id="bigBotHead" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2FD1D4"/>
+      <stop offset="100%" stop-color="#128689"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="168" cy="418" rx="92" ry="14" fill="#0E1B2E" opacity="0.07"/>
+
+  <!-- back arm (down) -->
+  <rect x="55" y="235" width="34" height="105" rx="17" fill="#0E1B2E"/>
+  <!-- torso -->
+  <rect x="88" y="215" width="160" height="150" rx="46" fill="#0E1B2E"/>
+  <rect x="122" y="255" width="92" height="10" rx="5" fill="#2FD1D4"/>
+  <circle cx="138" cy="290" r="7" fill="#E0608E"/>
+  <circle cx="168" cy="290" r="7" fill="#7C6FE0"/>
+  <circle cx="198" cy="290" r="7" fill="#279C6B"/>
+  <!-- legs -->
+  <rect x="118" y="350" width="36" height="46" rx="14" fill="#0E1B2E"/>
+  <rect x="184" y="350" width="36" height="46" rx="14" fill="#0E1B2E"/>
+  <ellipse cx="136" cy="402" rx="26" ry="12" fill="#128689"/>
+  <ellipse cx="202" cy="402" rx="26" ry="12" fill="#128689"/>
+
+  <!-- waving arm (front, raised) -->
+  <g>
+    <rect x="228" y="150" width="32" height="98" rx="16" fill="#128689" transform="rotate(28 244 199)"/>
+    <circle cx="272" cy="140" r="20" fill="#128689"/>
+  </g>
+
+  <!-- antenna -->
+  <line x1="168" y1="18" x2="168" y2="42" stroke="#128689" stroke-width="5" stroke-linecap="round"/>
+  <path d="M168 4 L173 15 L185 17 L173 19 L168 30 L163 19 L151 17 L163 15 Z" fill="#E0608E"/>
+
+  <!-- head -->
+  <rect x="48" y="42" width="240" height="200" rx="76" fill="url(#bigBotHead)"/>
+  <circle cx="130" cy="82" r="10" fill="#FFFFFF" opacity="0.18"/>
+
+  <!-- ears -->
+  <rect x="34" y="118" width="20" height="46" rx="10" fill="#0E1B2E" opacity="0.12"/>
+  <rect x="286" y="118" width="20" height="46" rx="10" fill="#0E1B2E" opacity="0.12"/>
+
+  <!-- eyes -->
+  <g class="mascot-eye eye-l">
+    <circle cx="128" cy="140" r="30" fill="#FFFFFF"/>
+    <circle cx="132" cy="143" r="13" fill="#0E1B2E"/>
+    <circle cx="127" cy="138" r="4" fill="#FFFFFF"/>
+  </g>
+  <g class="mascot-eye eye-r">
+    <circle cx="208" cy="140" r="30" fill="#FFFFFF"/>
+    <circle cx="212" cy="143" r="13" fill="#0E1B2E"/>
+    <circle cx="207" cy="138" r="4" fill="#FFFFFF"/>
+  </g>
+
+  <!-- blush -->
+  <circle cx="88" cy="172" r="12" fill="#E0608E" opacity="0.35"/>
+  <circle cx="248" cy="172" r="12" fill="#E0608E" opacity="0.35"/>
+
+  <!-- mouth (closed smile <-> open talking, toggled via .talking class) -->
+  <path class="mascot-mouth mouth-closed" d="M120 190c14 18 86 18 100 0" stroke="#0E1B2E" stroke-width="7" stroke-linecap="round" fill="none"/>
+  <ellipse class="mascot-mouth mouth-open" cx="170" cy="196" rx="30" ry="17" fill="#0E1B2E"/>
+  <ellipse class="mascot-mouth mouth-open" cx="170" cy="200" rx="16" ry="7" fill="#E0608E" opacity="0.7"/>
+</svg>
+
+<div class="bot-hint" id="botHint">มีคำถามเรื่องการใช้แอปไหม ถามฉันได้เลย 💬</div>
+<button class="bot-fab" onclick="toggleBotChat()" aria-label="เปิดผู้ช่วย PROMPT MASTER">
+  <span class="ping"></span>
+  <svg width="30" height="30" viewBox="0 0 40 40" fill="none">
+    <rect x="6" y="8" width="28" height="20" rx="9" fill="#FFFFFF"/>
+    <circle cx="16" cy="18" r="3" fill="#128689"/>
+    <circle cx="24" cy="18" r="3" fill="#128689"/>
+    <path d="M20 3v5" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="20" cy="2.5" r="2.5" fill="#E0608E"/>
+    <path d="M14 33l3-5h6l3 5z" fill="#FFFFFF"/>
+  </svg>
+</button>
+
+<div class="bot-chat-panel" id="botChatPanel">
+  <div class="bot-chat-head">
+    <svg width="26" height="26" viewBox="0 0 40 40" fill="none">
+      <rect x="6" y="8" width="28" height="20" rx="9" fill="#FFFFFF"/>
+      <circle cx="16" cy="18" r="3" fill="#128689"/>
+      <circle cx="24" cy="18" r="3" fill="#128689"/>
+    </svg>
+    <div>
+      <b>ผู้ช่วย PROMPT MASTER</b>
+      <span>ถามได้ทุกเรื่องเกี่ยวกับการใช้งานแอปนี้</span>
+    </div>
+    <button class="bot-chat-close" onclick="toggleBotChat()">✕</button>
+  </div>
+  <div class="bot-msgs" id="botMsgs"></div>
+  <div class="bot-quick" id="botQuick"></div>
+  <div class="bot-input-row">
+    <input type="text" id="botInput" placeholder="พิมพ์คำถามที่นี่..." onkeydown="if(event.key==='Enter') sendBotMessage()">
+    <button class="bot-send" onclick="sendBotMessage()" aria-label="ส่ง">➤</button>
+  </div>
+</div>
+
+<div class="topbar">
+  <div class="brand">
+    <svg width="30" height="30" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20 14h16a6 6 0 0 1 6 6v10a6 6 0 0 1-6 6h-2l-6 7v-7h-8a6 6 0 0 1-6-6V20a6 6 0 0 1 6-6z" stroke="#0E1B2E" stroke-width="3.4" stroke-linejoin="round"/>
+      <circle cx="24" cy="25" r="1.8" fill="#0E1B2E"/>
+      <circle cx="28.6" cy="25" r="1.8" fill="#0E1B2E"/>
+      <circle cx="33.2" cy="25" r="1.8" fill="#0E1B2E"/>
+      <path d="M47 8 L49 14 L55 16 L49 18 L47 24 L45 18 L39 16 L45 14 Z" fill="#22BEC1"/>
+    </svg>
+    <div class="brand-text">
+      <b>PROMPT <span class="m">MASTER</span></b>
+      <span>Master your prompt, master AI</span>
+    </div>
+  </div>
+  <div class="tabs" id="tabBtns">
+    <button class="tab-btn active" data-tab="learn">เรียนรู้</button>
+    <button class="tab-btn" data-tab="lab">ห้องฝึก</button>
+    <button class="tab-btn" data-tab="missions">ด่านฝึกฝน</button>
+    <button class="tab-btn" data-tab="techniques">เทคนิค PROMPT</button>
+  </div>
+  <div style="display:flex; gap:8px; align-items:center;">
+    <div class="mastery-pill" id="masteryPill">🔰 มือใหม่</div>
+    <button class="journal-btn" onclick="openDrawer()">บันทึก <span class="badge-count" id="journalCount">0</span></button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <svg class="hero-deco" viewBox="0 0 900 280" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+      <circle cx="450" cy="130" r="118" stroke="#22BEC1" stroke-width="1.2" stroke-dasharray="2 8" opacity="0.35"/>
+      <circle cx="450" cy="130" r="168" stroke="#7C6FE0" stroke-width="1.2" stroke-dasharray="2 8" opacity="0.25"/>
+      <circle cx="120" cy="50" r="4" fill="#E0608E" opacity="0.5"/>
+      <circle cx="770" cy="40" r="5" fill="#22BEC1" opacity="0.5"/>
+      <circle cx="805" cy="150" r="3.5" fill="#7C6FE0" opacity="0.5"/>
+      <circle cx="80" cy="180" r="3.5" fill="#279C6B" opacity="0.5"/>
+      <path d="M745 12 L749 20 L757 22 L749 24 L745 32 L741 24 L733 22 L741 20 Z" fill="#22BEC1" opacity="0.55"/>
+      <path d="M95 210 L98 216 L104 218 L98 220 L95 226 L92 220 L86 218 L92 216 Z" fill="#E0608E" opacity="0.5"/>
+    </svg>
+    <h1>ฝึกออกแบบพรอมต์<br>ให้เชี่ยวชาญเหมือน <span class="accent">Prompt Master</span></h1>
+    <p>ทดลองเขียนพรอมต์ ส่งให้ Generative AI ทำงานจริง แล้วสังเกตว่าพรอมต์แบบไหนควบคุมผลลัพธ์ได้ดีกว่ากัน</p>
+
+    <div class="meter-wrap">
+      <div class="meter-track"><div class="meter-fill" id="meterFill"></div></div>
+      <div class="meter-labels">
+        <span id="lvl1">มือใหม่</span>
+        <span id="lvl2">ผู้ฝึกฝน</span>
+        <span id="lvl3">Prompt Master</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= LEARN TAB ================= -->
+  <div class="panel active" id="panel-learn">
+    <div class="section-title">4 องค์ประกอบของพรอมต์ระดับมาสเตอร์</div>
+    <div class="puzzle-grid">
+      <div class="puzzle-piece">
+        <div class="num">01</div>
+        <h3>เป็นใคร</h3>
+        <p>บอก AI ว่าอยากให้สวมบทบาทอะไร</p>
+        <div class="ex">"ในฐานะนักเขียนนิทานเด็ก..."</div>
+      </div>
+      <div class="puzzle-piece">
+        <div class="num">02</div>
+        <h3>ทำอะไร</h3>
+        <p>ระบุงานที่ต้องการให้ทำอย่างชัดเจน</p>
+        <div class="ex">"จงช่วยแต่งนิทาน..."</div>
+      </div>
+      <div class="puzzle-piece">
+        <div class="num">03</div>
+        <h3>บริบท</h3>
+        <p>ให้รายละเอียดประกอบ เพื่อให้ผลลัพธ์ตรงจุด</p>
+        <div class="ex">"...เกี่ยวกับครอบครัวในโลกอนาคตอีก 10 ปี มีพ่อ แม่ พี่ชาย น้องสาว"</div>
+      </div>
+      <div class="puzzle-piece">
+        <div class="num">04</div>
+        <h3>รูปแบบ</h3>
+        <p>กำหนดว่าอยากได้ผลลัพธ์ออกมาแบบไหน</p>
+        <div class="ex">"...แสดงผลเป็นนิทานสั้น 5 ย่อหน้า"</div>
+      </div>
+    </div>
+
+    <div class="section-title">พรอมต์แบบต่อเนื่อง</div>
+    <div class="card">
+      <p style="margin:0 0 4px; color:var(--muted); font-size:13.5px;">นอกจากใส่ทุกอย่างในพรอมต์เดียว มาสเตอร์ตัวจริงยัง "คุยต่อ" กับ AI เพื่อปรับผลลัพธ์ทีละขั้นได้</p>
+      <div class="flow-demo">
+        <div class="flow-step"><b>พรอมต์แรก</b>ขอให้ AI แต่งนิทานสั้น ๆ</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><b>พรอมต์ต่อ</b>"ช่วยเพิ่มบทสนทนาของตัวละคร"</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><b>พรอมต์ต่อ</b>"เปลี่ยนตอนจบให้เซอร์ไพรส์กว่านี้"</div>
+      </div>
+    </div>
+
+    <div class="section-title">ด่านตรวจสอบ — AI ก็ "หลอน" ได้</div>
+    <div class="card danger-card">
+      <p style="margin:0; font-size:13.5px; color:var(--ink-soft);">Generative AI อาจสร้างข้อมูลที่ฟังดูมั่นใจแต่ไม่ถูกต้อง เรียกว่า <b style="color:var(--danger)">อาการหลอนของ AI (AI hallucination)</b> มาสเตอร์ตัวจริงจะตรวจสอบผลลัพธ์กับแหล่งข้อมูลที่น่าเชื่อถือก่อนนำไปใช้เสมอ — ฝึกจับผิดได้ในด่าน "นักสืบ AI" ด้านล่าง</p>
+    </div>
+
+    <div class="section-title">5 เทคนิค PROMPT ประจำ 5 สมรรถนะ</div>
+    <div class="tech-grid">
+      <div class="tech-card">
+        <div class="tech-head"><span class="tech-icon">🧭</span><h3>CARE — จริยธรรม</h3></div>
+        <p class="tech-desc"><b>C</b>heck เป้าหมาย · <b>A</b>cknowledge บอกว่าใช้ AI · <b>R</b>espect ผลกระทบต่อผู้อื่น · <b>E</b>valuate ก่อนใช้จริง</p>
+        <div class="tech-compare">
+          <div class="tech-box weak"><span class="tag">ก่อน</span>ช่วยเขียนการบ้านเรื่องระบบนิเวศให้หน่อย</div>
+          <div class="tech-arrow">→</div>
+          <div class="tech-box strong"><span class="tag">หลัง</span>ช่วยอธิบายระบบนิเวศแบบเข้าใจง่าย เพื่อเอาไปเรียบเรียงเป็นการบ้านด้วยคำพูดตัวเอง</div>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-head"><span class="tech-icon">🔍</span><h3>RACE — เข้าถึง/ใช้งาน</h3></div>
+        <p class="tech-desc"><b>R</b>ole บทบาท · <b>A</b>ction สิ่งที่ต้องทำ · <b>C</b>ontext บริบท · <b>E</b>xample ตัวอย่างผลลัพธ์</p>
+        <div class="tech-compare">
+          <div class="tech-box weak"><span class="tag">ก่อน</span>ช่วยอธิบายเรื่องระบบสุริยะหน่อย</div>
+          <div class="tech-arrow">→</div>
+          <div class="tech-box strong"><span class="tag">หลัง</span>ในฐานะครูวิทย์ อธิบายระบบสุริยะให้ ม.1 เข้าใจง่าย พร้อมตัวอย่างเปรียบเทียบ</div>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-head"><span class="tech-icon">🕵️</span><h3>SIFT — วิเคราะห์/ประเมิน</h3></div>
+        <p class="tech-desc"><b>S</b>top อย่าเพิ่งเชื่อ · <b>I</b>nvestigate ตรวจที่มา · <b>F</b>ind หาแหล่งอื่นเทียบ · <b>T</b>race สืบย้อนหลักฐาน</p>
+        <div class="tech-compare">
+          <div class="tech-box weak"><span class="tag">ก่อน</span>สถิติปัญหาสิ่งแวดล้อมในไทยเป็นยังไง</div>
+          <div class="tech-arrow">→</div>
+          <div class="tech-box strong"><span class="tag">หลัง</span>บอกสถิติพร้อมระบุว่าน่าจะมาจากแหล่งไหน และควรตรวจสอบอะไรเพิ่ม</div>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-head"><span class="tech-icon">🤝</span><h3>TEAM — มีส่วนร่วม</h3></div>
+        <p class="tech-desc"><b>T</b>alk คุยกับเพื่อนก่อน · <b>E</b>xplain อธิบายบทบาท AI · <b>A</b>gree ตกลงร่วมกัน · <b>M</b>erge รวมงานอย่างเป็นธรรม</p>
+        <div class="tech-compare">
+          <div class="tech-box weak"><span class="tag">ก่อน</span>ช่วยแบ่งงานกลุ่ม 4 คนให้หน่อย</div>
+          <div class="tech-arrow">→</div>
+          <div class="tech-box strong"><span class="tag">หลัง</span>เสนอวิธีแบ่งงานตามความถนัด เพื่อเอาไปคุยตกลงกันในกลุ่มอีกที</div>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-head"><span class="tech-icon">🎨</span><h3>SPARK — สร้างสรรค์</h3></div>
+        <p class="tech-desc"><b>S</b>tyle สไตล์ · <b>P</b>urpose จุดประสงค์ · <b>A</b>udience กลุ่มเป้าหมาย · <b>R</b>efine ขัดเกลา · <b>K</b>eep เป็นของตัวเอง</p>
+        <div class="tech-compare">
+          <div class="tech-box weak"><span class="tag">ก่อน</span>ช่วยออกแบบป้ายประชาสัมพันธ์ชุมนุมให้หน่อย</div>
+          <div class="tech-arrow">→</div>
+          <div class="tech-box strong"><span class="tag">หลัง</span>โทนสนุกสนาน เป้าหมายชวนสมัครชุมนุม กลุ่มเป้าหมาย ม.ต้น ขอ 3 แบบเทียบ</div>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center; margin-top:18px;">
+      <button class="btn-secondary" onclick="switchTab('techniques')">ลองเทียบผลจริงกับ AI →</button>
+    </div>
+
+    <div style="text-align:center; margin-top:36px;">
+      <button class="btn-primary" onclick="switchTab('lab')">ไปที่ห้องฝึก →</button>
+    </div>
+  </div>
+
+  <!-- ================= LAB TAB ================= -->
+  <div class="panel" id="panel-lab">
+    <div class="ctx-intro">
+      <div class="ctx-hint-big">เลือกด้านที่อยากประเมินสมรรถนะตัวเอง</div>
+      <div class="ctx-hint">ระบบจะจำลองสถานการณ์และเติมตัวอย่างให้เริ่มต้นง่ายขึ้น</div>
+    </div>
+    <div class="ctx-select" id="ctxSelect"></div>
+    <div class="scenario-row" style="margin:16px 0; flex-direction:column; justify-content:center; text-align:center;">
+      <button class="dice-btn dice-btn-lg" onclick="randomLabScenario()"><span class="emoji">🎲</span>สุ่มสถานการณ์ใกล้ตัว</button>
+      <span class="hint">ไม่อยากเลือกด้านเอง? สุ่มสถานการณ์ใกล้ตัวมาลองเลย</span>
+    </div>
+    <div class="scenario-box" id="labScenarioBox"></div>
+
+    <div class="altar">
+      <div class="slot-grid">
+        <div class="slot">
+          <label>เป็นใคร</label>
+          <input type="text" id="slotWho" placeholder="เช่น ติวเตอร์วิชาคณิตศาสตร์, รุ่นพี่ที่เก่งวิชาภาษาอังกฤษ">
+        </div>
+        <div class="slot">
+          <label>ทำอะไร</label>
+          <input type="text" id="slotWhat" placeholder="เช่น ช่วยสรุปบทเรียนก่อนสอบ, ช่วยอธิบายโจทย์ที่ทำไม่ได้">
+        </div>
+        <div class="slot" style="grid-column:1/-1;">
+          <label>บริบท</label>
+          <textarea id="slotContext" rows="2" placeholder="รายละเอียดเพิ่มเติมที่ AI ควรรู้ เช่น วิชา บทเรียน ระดับชั้น สิ่งที่ยังไม่เข้าใจ"></textarea>
+        </div>
+        <div class="slot">
+          <label>รูปแบบผลลัพธ์</label>
+          <input type="text" id="slotFormat" placeholder="เช่น สรุปเป็นข้อ ๆ, ตารางเปรียบเทียบ, อธิบายทีละขั้นตอน">
+        </div>
+        <div class="slot">
+          <label>ตั้งชื่อพรอมต์นี้ (ไม่บังคับ)</label>
+          <input type="text" id="slotName" placeholder="เช่น พรอมต์ที่ 1">
+        </div>
+      </div>
+
+      <div class="preview-box">
+        <div class="preview-label">พรอมต์ที่ประกอบแล้ว</div>
+        <span id="promptPreview" style="color:#7C8B99;">กรอกข้อมูลด้านบนเพื่อประกอบพรอมต์...</span>
+      </div>
+
+      <div class="cast-row">
+        <button class="btn-primary" id="castBtn" onclick="castPrompt()">ทดสอบพรอมต์</button>
+        <button class="btn-ghost" onclick="clearSlots()">ล้างค่า</button>
+        <span class="hint">ผลลัพธ์มาจาก Generative AI จริง — โปรดตรวจสอบก่อนเชื่อเสมอ</span>
+      </div>
+
+      <div class="result-card" id="resultCard">
+        <div class="result-head">ผลลัพธ์จาก AI</div>
+        <div class="result-text" id="resultText"></div>
+
+        <div class="followup-row">
+          <input type="text" id="followupInput" placeholder="อยากปรับผลลัพธ์นี้อย่างไร? เช่น 'เพิ่มบทสนทนาให้มากขึ้น' (พรอมต์แบบต่อเนื่อง)">
+          <button class="btn-secondary" onclick="castFollowup()">ส่งพรอมต์ต่อ</button>
+        </div>
+
+        <div class="save-row">
+          <span style="font-size:12.5px; color:var(--muted);">พอใจกับผลลัพธ์แค่ไหน?</span>
+          <div class="rating-btns" id="ratingBtns">
+            <button onclick="pickRating('ดี')" data-r="ดี">👍 ดี</button>
+            <button onclick="pickRating('พอใช้')" data-r="พอใช้">🤔 พอใช้</button>
+            <button onclick="pickRating('ควรปรับปรุง')" data-r="ควรปรับปรุง">👎 ควรปรับปรุง</button>
+          </div>
+          <button class="btn-secondary" onclick="saveToJournal()">บันทึกลงสมุด</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MISSIONS TAB ================= -->
+  <div class="panel" id="panel-missions">
+
+    <div class="mission-intro">
+      <svg class="mascot" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="botGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#2FD1D4"/>
+            <stop offset="100%" stop-color="#128689"/>
+          </linearGradient>
+        </defs>
+        <ellipse cx="60" cy="106" rx="26" ry="6" fill="#0E1B2E" opacity="0.06"/>
+        <line x1="60" y1="10" x2="60" y2="21" stroke="#128689" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="60" cy="8" r="5" fill="#E0608E"/>
+        <rect x="24" y="20" width="72" height="60" rx="24" fill="url(#botGrad)"/>
+        <circle cx="42" cy="48" r="10" fill="#FFFFFF"/>
+        <circle cx="78" cy="48" r="10" fill="#FFFFFF"/>
+        <circle cx="44" cy="49" r="4.5" fill="#0E1B2E"/>
+        <circle cx="80" cy="49" r="4.5" fill="#0E1B2E"/>
+        <path d="M46 64c5 6 23 6 28 0" stroke="#0E1B2E" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+        <rect x="30" y="46" width="6" height="14" rx="3" fill="#0E1B2E" opacity="0.12"/>
+        <rect x="84" y="46" width="6" height="14" rx="3" fill="#0E1B2E" opacity="0.12"/>
+        <rect x="40" y="82" width="40" height="18" rx="9" fill="#0E1B2E" opacity="0.9"/>
+        <rect x="48" y="87" width="24" height="4" rx="2" fill="#2FD1D4"/>
+      </svg>
+      <div class="intro-text">
+        <b>สวัสดี! พร้อมประเมินตัวเองหรือยัง?</b>
+        <span>แต่ละด่านคือสถานการณ์ประเมินสมรรถนะ AI 1 ด้าน ลองทำสถานการณ์ สะท้อนคิด แล้วประเมินตัวเองท้ายด่าน ให้ครบทุกด่านเพื่อปลดล็อกระดับ Prompt Master</span>
+      </div>
+    </div>
+
+    <div class="domain-intro">
+      <div class="domain-hint-big">เลือกด้านที่อยากฝึกฝน</div>
+      <div class="domain-hint-sub">แต่ละด้านมี 10 ด่าน แตะปุ่มด้านล่างเพื่อเริ่มเลย</div>
+    </div>
+    <div class="domain-tabs" id="domainTabs"></div>
+    <div class="domain-progress" id="domainProgress"></div>
+    <div class="level-path-wrap" id="levelPathWrap"></div>
+    <div class="level-panel" id="levelPanel"></div>
+
+  </div>
+
+  <!-- ================= TECHNIQUES TAB ================= -->
+  <div class="panel" id="panel-techniques">
+    <div class="domain-intro">
+      <div class="domain-hint-big">เทคนิค PROMPT</div>
+      <div class="domain-hint-sub">สูตรจำง่ายสำหรับแต่ละสมรรถนะ MAIL — เลือกเทคนิค แก้พรอมต์ได้ตามใจ แล้วกดทดสอบเทียบผลจริงจาก AI</div>
+    </div>
+    <div class="tech-tabs" id="techTabs"></div>
+    <div class="tech-panel" id="techPanel"></div>
+  </div>
+
+</div>
+
+<footer>PROMPT MASTER — ฝึกสมรรถนะการออกแบบพรอมต์ เชื่อมโยงกับ 5 สมรรถนะของกรอบ PISA 2029 MAIL (Media and Artificial Intelligence Literacy)</footer>
+
+
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="journalDrawer">
+  <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  <h2>บันทึกความก้าวหน้า</h2>
+  <div class="sub">รวมพรอมต์และผลลัพธ์ที่บันทึกไว้ระหว่างฝึกฝน</div>
+  <div id="journalList"></div>
+</div>
+
+<script>
+// ⚙️ ตั้งค่า URL ของ Backend Proxy ที่นี่ (ดูวิธีสร้างใน README.md)
+// ตัวอย่าง: "https://prompt-master-proxy.YOUR-SUBDOMAIN.workers.dev"
+const API_ENDPOINT = "https://prompt-master-proxy.teeraphon-p.workers.dev";
+function checkApiSetup(){
+  if(API_ENDPOINT.includes('YOUR-SUBDOMAIN')){
+    throw new Error('ยังไม่ได้ตั้งค่า API_ENDPOINT — เปิดไฟล์ index.html แล้วแก้บรรทัด API_ENDPOINT ให้เป็น URL ของ Worker ที่สร้างไว้ (ดูขั้นตอนใน README.md)');
+  }
+}
+
+let journal = [];
+let currentPrompt = "";
+let currentMessages = [];
+let currentRating = null;
+
+// ---------- scenario bank (สถานการณ์ใกล้ตัวนักเรียน / เหตุการณ์ปัจจุบัน) ----------
+const SCENARIOS = [
+  { icon:'🌫️', title:'ฝุ่น PM2.5 พุ่งสูงในเมืองไทย', hook:'ช่วงนี้หลายเมืองในไทยค่าฝุ่น PM2.5 สูงจนต้องเลี่ยงกิจกรรมกลางแจ้ง', topic:'สาเหตุและผลกระทบของฝุ่น PM2.5 ต่อสุขภาพคนเมือง' },
+  { icon:'🚗', title:'รถยนต์ไฟฟ้า (EV) กับอนาคตการเดินทาง', hook:'ครอบครัวจำนวนมากเริ่มเปลี่ยนมาใช้รถ EV กันมากขึ้น', topic:'ข้อดีข้อเสียของรถยนต์ไฟฟ้า (EV) ต่อสิ่งแวดล้อมและค่าใช้จ่ายครอบครัว' },
+  { icon:'💸', title:'ของแพงขึ้น ค่าขนมไม่พอเหมือนเดิม', hook:'ช่วงนี้ข้าวของแพงขึ้น หลายคนบ่นว่าค่าขนมที่ได้จากพ่อแม่ไม่พอใช้เหมือนก่อน', topic:'วิธีบริหารเงินค่าขนมของนักเรียนให้พอใช้ทั้งสัปดาห์' },
+  { icon:'🏐', title:'วอลเลย์บอลหญิงไทยลงแข่งซีเกมส์/ถ้วยระดับภูมิภาค', hook:'ทีมวอลเลย์บอลหญิงไทยกำลังเป็นกระแสในโซเชียลจากการแข่งขันระดับภูมิภาค', topic:'แรงบันดาลใจจากนักกีฬาทีมชาติไทยที่นักเรียนชื่นชอบ' },
+  { icon:'🎮', title:'เกมที่เพื่อนทั้งห้องกำลังเล่น', hook:'ลองนึกถึงเกมที่เพื่อนๆ ในห้องกำลังฮิตเล่นกันอยู่ตอนนี้', topic:'กติกาหรือไกด์เริ่มเล่นเกมยอดฮิตในห้องสำหรับเพื่อนมือใหม่' },
+  { icon:'🌍', title:'วันเยาวชนสากล 12 สิงหาคม', hook:'ธีมปีนี้คือ "บริบทที่แตกต่าง แต่ความปรารถนาเดียวกัน" ของเยาวชนทั่วโลก', topic:'ชีวิตประจำวันของนักเรียนไทยเทียบกับเยาวชนประเทศอื่น' },
+  { icon:'📱', title:'เทรนด์ไวรัลใน TikTok ตอนนี้', hook:'นึกถึงคลิปหรือชาเลนจ์ที่กำลังไวรัลในโซเชียลของนักเรียนตอนนี้', topic:'ความน่าเชื่อถือของข้อมูลในคลิปไวรัลที่กำลังแชร์กันในโซเชียล' },
+  { icon:'🤖', title:'ภาพ/ข้อความที่สงสัยว่าเป็น AI สร้าง (deepfake)', hook:'เพื่อนแชร์ภาพหรือคลิปที่ดูสมจริงมาก แต่ไม่แน่ใจว่าเป็นของจริงหรือ AI สร้างขึ้น', topic:'วิธีสังเกตและตรวจสอบภาพหรือข้อความที่อาจเป็น AI deepfake' },
+  { icon:'📖', title:'การบ้านวิชาภาษาอังกฤษเรื่อง Present Simple', hook:'พรุ่งนี้ต้องส่งแบบฝึกหัดไวยากรณ์ภาษาอังกฤษ', topic:'หลักการใช้ Present Simple Tense ในภาษาอังกฤษ' },
+  { icon:'📝', title:'ตารางสอบปลายภาคที่กำลังจะมาถึง', hook:'อีก 2 สัปดาห์จะสอบปลายภาค ต้องวางแผนอ่านหนังสือหลายวิชา', topic:'การวางแผนอ่านหนังสือสอบปลายภาคให้ครบทุกวิชา' },
+];
+
+// ---------- in-app help chatbot ----------
+let botMessages = [];
+let botOpened = false;
+const BOT_QUICK_QUESTIONS = [
+  'เริ่มใช้งานแอปนี้ยังไง',
+  'ห้องฝึกคืออะไร',
+  'มีภารกิจกี่ด่าน',
+  'ดูบันทึกความก้าวหน้าตรงไหน',
+  '🎲 สุ่มสถานการณ์ใช้ยังไง'
+];
+const BOT_SYSTEM_PROMPT = `คุณคือ "ผู้ช่วย PROMPT MASTER" แชทบอทที่ทำหน้าที่แนะนำการใช้งานเว็บแอปการศึกษาชื่อ PROMPT MASTER สำหรับนักเรียนมัธยมต้น (ม.1-3) ที่ฝึกทักษะการออกแบบพรอมต์และรู้เท่าทัน AI ตามกรอบ PISA 2029 MAIL Framework
+
+โครงสร้างแอปมี 4 แท็บ:
+1. "เรียนรู้" สอน 4 องค์ประกอบของพรอมต์ (เป็นใคร/ทำอะไร/บริบท/รูปแบบ), พรอมต์แบบต่อเนื่อง, เรื่อง AI hallucination, และการ์ด 5 เทคนิค PROMPT แบบตัวย่อจำง่าย ประจำสมรรถนะ MAIL แต่ละด้าน ได้แก่ CARE (จริยธรรม: Check-Acknowledge-Respect-Evaluate), RACE (เข้าถึง/ใช้งาน: Role-Action-Context-Example), SIFT (วิเคราะห์/ประเมิน: Stop-Investigate-Find-Trace), TEAM (มีส่วนร่วม: Talk-Explain-Agree-Merge), SPARK (สร้างสรรค์: Style-Purpose-Audience-Refine-Keep) พร้อมตัวอย่างก่อน-หลัง
+2. "ห้องฝึก" มีเครื่องมือ Prompt Builder 4 ช่องกรอกข้อมูล พร้อม preview แบบเรียลไทม์ ทดสอบส่งพรอมต์จริงไปยัง AI และคุยต่อแบบ follow-up ได้
+3. "ภารกิจ" แบ่งเป็น 5 ด้านสมรรถนะ MAIL (จริยธรรม, เข้าถึง/ใช้งาน, วิเคราะห์/ประเมิน, มีส่วนร่วม, สร้างสรรค์) แต่ละด้านมี 10 ด่านย่อยเรียงจากง่ายไปยาก (ด่าน 1-3 ง่าย มีตัวอย่างพรอมต์ให้, ด่าน 4-7 ปานกลาง ต้องเขียนพรอมต์เอง, ด่าน 8-10 ท้าทาย ไม่มีตัวอย่างเลย) รวม 50 ด่านทั้งแอป นักเรียนต้องทำด่านก่อนหน้าให้ผ่านก่อนถึงปลดล็อกด่านถัดไปในด้านนั้น (ระบบล็อก/ปลดล็อกแบบเส้นทาง) แต่ละด่านมีสถานการณ์ประเมินตั้งต้น ให้เขียนพรอมต์ ทดสอบกับ AI จริง ตอบคำถามสะท้อนคิด และติ๊กแบบประเมินตนเองก่อนกด "ผ่านด่าน"
+4. "เทคนิค PROMPT" ให้นักเรียนเลือก 1 ใน 5 เทคนิคตัวย่อ (CARE/RACE/SIFT/TEAM/SPARK) ดูความหมายแต่ละตัวอักษร แล้วเทียบผลจริงจาก AI แบบ "พรอมต์อ่อน" กับ "ใช้เทคนิค" ข้างกัน แก้ไขพรอมต์ทั้งสองฝั่งได้ก่อนกดทดสอบ แล้วตอบคำถามสะท้อนคิดและบันทึกได้
+
+มีปุ่ม "บันทึก" มุมขวาบนของหน้าเว็บ เปิดสมุดบันทึกความก้าวหน้า (Journal) เก็บพรอมต์และผลลัพธ์ที่บันทึกไว้ และมีมิเตอร์ระดับความเชี่ยวชาญ 3 ระดับ (มือใหม่ → ผู้ฝึกฝน → Prompt Master) ที่เพิ่มขึ้นตามจำนวนบันทึก
+
+ตอบคำถามสั้น กระชับ เป็นกันเอง เหมาะกับนักเรียนมัธยมต้น ใช้ภาษาไทย ไม่เกิน 3-4 ประโยค ถ้าคำถามไม่เกี่ยวกับการใช้งานแอปนี้เลย ให้ตอบอย่างสุภาพว่าคุณช่วยได้เฉพาะเรื่องการใช้งานแอป PROMPT MASTER เท่านั้น`;
+
+function toggleBotChat(){
+  const panel = document.getElementById('botChatPanel');
+  const hint = document.getElementById('botHint');
+  panel.classList.toggle('show');
+  if(hint) hint.style.display = 'none';
+  if(panel.classList.contains('show') && !botOpened){
+    botOpened = true;
+    const mascot = document.getElementById('bgMascot');
+    if(mascot){
+      mascot.classList.add('talking');
+      setTimeout(()=>mascot.classList.remove('talking'), 1400);
+    }
+    addBotBubble('bot', 'สวัสดี! ฉันคือผู้ช่วยของ PROMPT MASTER 🤖 อยากรู้อะไรเกี่ยวกับการใช้งานแอป ลองแตะคำถามด้านล่าง หรือพิมพ์ถามได้เลย');
+    renderBotQuick();
+  }
+}
+function renderBotQuick(){
+  const q = document.getElementById('botQuick');
+  q.innerHTML = '';
+  BOT_QUICK_QUESTIONS.forEach(text=>{
+    const b = document.createElement('button');
+    b.textContent = text;
+    b.onclick = ()=>sendBotMessage(text);
+    q.appendChild(b);
+  });
+}
+function addBotBubble(role, text){
+  const msgs = document.getElementById('botMsgs');
+  const div = document.createElement('div');
+  div.className = 'bot-msg ' + (role==='user' ? 'user' : 'bot');
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+async function callClaudeBot(messages){
+  checkApiSetup();
+  const response = await fetch(API_ENDPOINT, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 300,
+      system: BOT_SYSTEM_PROMPT,
+      messages: messages
+    })
+  });
+  const data = await response.json();
+  if(!response.ok || data.type === 'error'){
+    const apiMsg = (data.error && data.error.message) || JSON.stringify(data);
+    throw new Error(`API ตอบกลับมาเป็น error (HTTP ${response.status}): ${apiMsg}`);
+  }
+  const textBlocks = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text);
+  return textBlocks.join('\n') || "ขอโทษที ลองถามอีกครั้งนะ";
+}
+async function sendBotMessage(presetText){
+  const input = document.getElementById('botInput');
+  const text = (presetText!==undefined ? presetText : input.value).trim();
+  if(!text) return;
+  input.value = '';
+  addBotBubble('user', text);
+  botMessages.push({role:'user', content:text});
+  document.getElementById('botQuick').innerHTML = '';
+
+  const mascot = document.getElementById('bgMascot');
+  if(mascot) mascot.classList.add('talking');
+  const typing = addBotBubble('bot', '...');
+  try{
+    const reply = await callClaudeBot(botMessages);
+    botMessages.push({role:'assistant', content:reply});
+    typing.textContent = reply;
+  }catch(e){
+    typing.textContent = e.message || 'ขอโทษที ตอนนี้เชื่อมต่อไม่ได้ ลองใหม่อีกครั้งนะ';
+  }finally{
+    if(mascot) mascot.classList.remove('talking');
+  }
+  document.getElementById('botMsgs').scrollTop = document.getElementById('botMsgs').scrollHeight;
+}
+
+// ---------- PISA 2029 MAIL: สถานการณ์ประเมิน 5 ด้าน ----------
+const CONTEXTS = [
+  { key:'ethics', icon:'🧭', label:'จริยธรรม', who:'เพื่อนที่ปรึกษาเรื่องการใช้ AI ทำงาน', what:'ช่วยประเมินว่าควรใช้ AI แค่ไหนกับงานชิ้นนี้', ctx:'คืนนี้ต้องส่งการบ้านพรุ่งเช้า ยังทำไม่เสร็จและง่วงมากแล้ว เพื่อนแนะนำให้ใช้ AI ช่วยทำให้เสร็จเลย', fmt:'คำแนะนำสั้น ๆ พร้อมเหตุผล',
+    scenario:'คุณต้องตัดสินใจว่าจะใช้ AI ช่วยการบ้านแค่ไหนถึงจะรับผิดชอบและเป็นธรรมต่อตัวเองและเพื่อนร่วมชั้น' },
+  { key:'access', icon:'🔍', label:'เข้าถึง/ใช้งาน', who:'ผู้ช่วยค้นคว้าข้อมูลทำรายงาน', what:'ช่วยค้นคว้าและสรุปข้อมูลหัวข้อที่ได้รับมอบหมาย', ctx:'ครูมอบหมายรายงานหัวข้อกว้าง ๆ ส่งในอีก 3 วัน พิมพ์ถาม AI ไปหลายครั้งแต่ได้คำตอบกว้างเกินไปไม่ตรงจุด', fmt:'หัวข้อย่อยพร้อมประเด็นสำคัญ',
+    scenario:'คุณจะออกแบบพรอมต์ค้นคว้าให้ตรงเป้าหมายของรายงานได้อย่างมีประสิทธิภาพหรือไม่' },
+  { key:'analyze', icon:'🕵️', label:'วิเคราะห์/ประเมิน', who:'นักวิเคราะห์ข้อมูลก่อนนำไปใช้', what:'ช่วยตรวจสอบว่าข้อมูลที่ AI ให้มาน่าเชื่อถือแค่ไหน', ctx:'AI ให้สถิติชุดหนึ่งมาสำหรับนำเสนอหน้าชั้น ตัวเลขดูมั่นใจมากแต่ไม่แน่ใจว่าถูกต้องจริง', fmt:'รายการข้อสังเกตสั้น ๆ',
+    scenario:'คุณจะตั้งคำถามและตรวจสอบความน่าเชื่อถือของเนื้อหาที่ AI สร้างขึ้นก่อนนำไปใช้จริงได้ดีเพียงใด' },
+  { key:'participate', icon:'🤝', label:'มีส่วนร่วม', who:'เพื่อนร่วมทีมที่ช่วยประสานงานกลุ่ม', what:'ช่วยเสนอวิธีแบ่งงานให้สมาชิกกลุ่ม 4 คน', ctx:'กลุ่มยังตกลงกันไม่ได้ว่าใครทำส่วนไหน เพื่อนคนหนึ่งเสนอให้ AI ช่วยแบ่งงานให้เลย', fmt:'ตารางแบ่งบทบาทสั้น ๆ',
+    scenario:'คุณจะใช้ AI สนับสนุนการทำงานร่วมกับผู้อื่น โดยไม่ให้ AI มาแทนที่การพูดคุยตกลงกันในกลุ่มได้หรือไม่' },
+  { key:'create', icon:'🎨', label:'สร้างสรรค์', who:'นักออกแบบสื่อประชาสัมพันธ์ของชุมนุม', what:'ช่วยออกแบบเนื้อหาป้ายประชาสัมพันธ์กิจกรรม', ctx:'ชุมนุมจะจัดกิจกรรมในโรงเรียน ต้องการป้ายที่ดึงดูดเพื่อนให้มาร่วมงาน แต่ยังไม่รู้จะสื่อสารอย่างไรให้ตรงเป้าหมาย', fmt:'ข้อความสโลแกนพร้อมแนวคิดภาพประกอบ',
+    scenario:'คุณจะระบุเป้าหมายการสื่อสารและเลือกเนื้อหา/รูปแบบที่เหมาะกับกลุ่มเป้าหมายได้ดีเพียงใด' },
+];
+let activeContext = null;
+function renderContextSelect(){
+  const wrap = document.getElementById('ctxSelect');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  CONTEXTS.forEach(c=>{
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'ctx-chip' + (activeContext===c.key ? ' active' : '');
+    b.innerHTML = `<span>${c.icon}</span>${c.label}`;
+    b.onclick = ()=>applyContext(c.key);
+    wrap.appendChild(b);
+  });
+}
+function applyContext(key){
+  const c = CONTEXTS.find(x=>x.key===key);
+  if(!c) return;
+  activeContext = key;
+  document.getElementById('slotWho').value = c.who;
+  document.getElementById('slotWhat').value = c.what;
+  document.getElementById('slotContext').value = c.ctx;
+  document.getElementById('slotFormat').value = c.fmt;
+  const box = document.getElementById('labScenarioBox');
+  if(box){
+    box.innerHTML = `<span class="scn-icon">${c.icon}</span><div><span class="assess-tag">สถานการณ์ประเมิน · ${c.label}</span><p>${c.scenario}</p></div>`;
+    box.classList.add('show');
+  }
+  renderContextSelect();
+  updatePreview();
+}
+
+const LAB_SCENARIO_TEMPLATES = {
+  ethics:      s => `ครูให้การบ้าน/รายงานเรื่อง "${s.title}" ส่งพรุ่งนี้ ยังทำไม่เสร็จและเพื่อนแนะนำให้ใช้ AI ช่วยทำให้เสร็จเลย`,
+  access:      s => `ครูมอบหมายรายงานเรื่อง "${s.title}" ส่งในอีก 3 วัน พิมพ์ถาม AI ไปหลายครั้งแต่ได้คำตอบกว้างเกินไปไม่ตรงจุด`,
+  analyze:     s => `AI ให้ข้อมูลเรื่อง "${s.title}" มาชุดหนึ่งสำหรับนำเสนอหน้าชั้น ข้อมูลดูมั่นใจมากแต่ไม่แน่ใจว่าถูกต้องจริง`,
+  participate: s => `กลุ่มของคุณต้องทำงานนำเสนอเรื่อง "${s.title}" แต่ยังตกลงกันไม่ได้ว่าใครทำส่วนไหน เพื่อนเสนอให้ AI ช่วยแบ่งงานให้เลย`,
+  create:      s => `ชุมนุม/ห้องเรียนของคุณต้องการสื่อประชาสัมพันธ์เกี่ยวกับเรื่อง "${s.title}" แต่ยังไม่รู้จะสื่อสารอย่างไรให้ดึงดูดเพื่อน`,
+};
+function randomLabScenario(){
+  const s = SCENARIOS[Math.floor(Math.random()*SCENARIOS.length)];
+  const d = CONTEXTS[Math.floor(Math.random()*CONTEXTS.length)];
+  const ctxText = (LAB_SCENARIO_TEMPLATES[d.key] || (()=>d.ctx))(s);
+
+  activeContext = d.key;
+  document.getElementById('slotWho').value = d.who;
+  document.getElementById('slotWhat').value = d.what;
+  document.getElementById('slotContext').value = ctxText;
+  document.getElementById('slotFormat').value = d.fmt;
+
+  const box = document.getElementById('labScenarioBox');
+  if(box){
+    box.innerHTML = `<span class="scn-icon">${s.icon}</span><div><span class="assess-tag">สถานการณ์ประเมิน · ${d.label}</span><p>${ctxText}</p></div>`;
+    box.classList.add('show');
+  }
+  renderContextSelect();
+  updatePreview();
+}
+
+// ---------- tabs ----------
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+document.getElementById('tabBtns').addEventListener('click', e=>{
+  const btn = e.target.closest('.tab-btn');
+  if(btn) switchTab(btn.dataset.tab);
+});
+
+// ---------- prompt builder ----------
+const slots = ['slotWho','slotWhat','slotContext','slotFormat'];
+function buildPrompt(){
+  const who = document.getElementById('slotWho').value.trim();
+  const what = document.getElementById('slotWhat').value.trim();
+  const ctx = document.getElementById('slotContext').value.trim();
+  const fmt = document.getElementById('slotFormat').value.trim();
+  if(!who && !what && !ctx && !fmt) return "";
+  let p = "";
+  if(who) p += `ในฐานะ${who} `;
+  if(what) p += `จงช่วย${what} `;
+  if(ctx) p += `โดยมีรายละเอียดคือ ${ctx} `;
+  if(fmt) p += `แสดงผลในรูปแบบ${fmt}`;
+  return p.trim();
+}
+function updatePreview(){
+  const p = buildPrompt();
+  const el = document.getElementById('promptPreview');
+  if(p){ el.style.color = '#DFF6F6'; el.textContent = p; }
+  else { el.style.color = '#7C8B99'; el.textContent = 'กรอกข้อมูลด้านบนเพื่อประกอบพรอมต์...'; }
+}
+slots.forEach(id=>document.getElementById(id).addEventListener('input', updatePreview));
+
+function clearSlots(){
+  slots.forEach(id=>document.getElementById(id).value='');
+  document.getElementById('slotName').value='';
+  updatePreview();
+  document.getElementById('resultCard').classList.remove('show');
+  currentRating = null;
+  activeContext = null;
+  renderContextSelect();
+}
+
+// ---------- Claude API (via backend proxy — see README.md) ----------
+async function callClaude(messages){
+  checkApiSetup();
+  const response = await fetch(API_ENDPOINT, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1000,
+      messages: messages
+    })
+  });
+  const data = await response.json();
+  if(!response.ok || data.type === 'error'){
+    const apiMsg = (data.error && data.error.message) || JSON.stringify(data);
+    throw new Error(`API ตอบกลับมาเป็น error (HTTP ${response.status}): ${apiMsg}`);
+  }
+  const textBlocks = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text);
+  return textBlocks.join('\n') || "(ไม่ได้รับคำตอบ ลองใหม่อีกครั้ง)";
+}
+
+// ---------- lab cast ----------
+async function castPrompt(){
+  const p = buildPrompt();
+  if(!p){ alert('กรอกข้อมูลอย่างน้อย 1 ช่องก่อนนะ'); return; }
+  currentPrompt = p;
+  currentMessages = [{role:'user', content:p}];
+  currentRating = null;
+  document.querySelectorAll('#ratingBtns button').forEach(b=>b.classList.remove('picked'));
+
+  const btn = document.getElementById('castBtn');
+  btn.disabled = true; btn.textContent = 'กำลังทดสอบ...';
+  const card = document.getElementById('resultCard');
+  card.classList.add('show');
+  document.getElementById('resultText').innerHTML = '<div class="loading-line"><div class="spinner"></div>AI กำลังประมวลผลคำตอบ...</div>';
+
+  try{
+    const text = await callClaude(currentMessages);
+    currentMessages.push({role:'assistant', content:text});
+    document.getElementById('resultText').textContent = text;
+  }catch(e){
+    document.getElementById('resultText').textContent = e.message || 'เกิดข้อผิดพลาดในการเรียก AI ลองใหม่อีกครั้ง';
+  }
+  btn.disabled = false; btn.textContent = 'ทดสอบพรอมต์';
+}
+
+async function castFollowup(){
+  const input = document.getElementById('followupInput');
+  const text = input.value.trim();
+  if(!text) return;
+  currentMessages.push({role:'user', content:text});
+  const rt = document.getElementById('resultText');
+  rt.innerHTML = '<div class="loading-line"><div class="spinner"></div>AI กำลังปรับคำตอบ...</div>';
+  input.value='';
+  try{
+    const reply = await callClaude(currentMessages);
+    currentMessages.push({role:'assistant', content:reply});
+    rt.textContent = reply;
+    currentPrompt = currentPrompt + '\n[ต่อเนื่อง] ' + text;
+  }catch(e){
+    rt.textContent = e.message || 'เกิดข้อผิดพลาด ลองใหม่อีกครั้ง';
+  }
+}
+
+function pickRating(r){
+  currentRating = r;
+  document.querySelectorAll('#ratingBtns button').forEach(b=>b.classList.toggle('picked', b.dataset.r===r));
+}
+
+function saveToJournal(){
+  const finalReply = document.getElementById('resultText').textContent;
+  if(!currentPrompt || !finalReply){ alert('ยังไม่มีผลลัพธ์ให้บันทึก'); return; }
+  const name = document.getElementById('slotName').value.trim() || 'ห้องฝึก';
+  journal.push({ tag: name, prompt: currentPrompt, reply: finalReply, rating: currentRating || '-' });
+  refreshJournal();
+  alert('บันทึกลงสมุดแล้ว ✓');
+}
+
+// ---------- missions: 5 domains × 10 levels (easy → hard) ----------
+// 50 distinct scenarios (10 per domain) — no two levels in the same domain share a situation
+const SCENARIO_SETS = {
+  ethics: [
+    { title:'การบ้านส่งพรุ่งนี้', text:'ครูให้การบ้านส่งพรุ่งนี้เช้า ยังทำไม่เสร็จและง่วงมากแล้ว เพื่อนแนะนำให้ใช้ AI ช่วยทำให้เสร็จเลย', seed:'สรุป/อธิบายเนื้อหาบทเรียนที่ต้องส่งพรุ่งนี้ เพื่อใช้ทำการบ้าน' },
+    { title:'งานกลุ่มที่อยากลัดขั้นตอน', text:'งานกลุ่มใกล้ถึงกำหนดส่ง เพื่อนในกลุ่มเสนอให้ก๊อปคำตอบจาก AI มาใช้เลยทั้งดุ้นโดยไม่ตรวจสอบ เพื่อประหยัดเวลา', seed:'ช่วยเขียนเนื้อหารายงานกลุ่มเรื่องหนึ่งให้เสร็จสมบูรณ์' },
+    { title:'บันทึกความรู้สึกส่วนตัว', text:'ครูให้เขียนบันทึกสะท้อนความรู้สึกส่วนตัวหลังทำกิจกรรมค่าย แต่คิดไม่ออกว่าจะเขียนอะไร เลยอยากลองให้ AI ช่วยเขียนแทน', seed:'ช่วยเขียนบันทึกสะท้อนความรู้สึกหลังเข้าค่ายกิจกรรมของโรงเรียน' },
+    { title:'เพื่อนขอยืมงานไปก๊อป', text:'เพื่อนเห็นว่าคุณให้ AI ช่วยทำการบ้านจนได้คำตอบดีมาก เลยขอให้ส่งคำตอบให้เพื่อนเอาไปก๊อปส่งครูด้วย', seed:'' },
+    { title:'สอบแบบเปิดหนังสือที่บ้าน', text:'ระหว่างทำข้อสอบแบบเปิดหนังสือที่บ้าน กฎไม่ได้ระบุชัดว่าห้ามใช้ AI คุณกำลังคิดว่าจะใช้ AI ช่วยตอบดีหรือไม่', seed:'' },
+    { title:'ผลงานศิลปะจาก AI ทั้งชิ้น', text:'วิชาศิลปะให้ส่งผลงานภาพวาดตามหัวข้อที่กำหนด คุณคิดจะใช้ AI ช่วยออกแบบภาพให้ทั้งหมดแล้วส่งเป็นผลงานตัวเอง', seed:'' },
+    { title:'แปลงานคนอื่นด้วย AI', text:'คุณเจอบทความภาษาอังกฤษที่เขียนไว้ดีมาก เลยคิดจะใช้ AI แปลและปรับคำเล็กน้อย แล้วส่งเป็นงานเขียนของตัวเอง', seed:'' },
+    { title:'AI ตอบผิดในงานที่ส่งไปแล้ว', text:'หลังส่งรายงานที่ใช้ AI ช่วยไปแล้ว คุณเพิ่งสังเกตว่ามีข้อมูลบางจุดที่ AI ตอบผิด แต่ครูยังไม่ได้ตรวจ', seed:'' },
+    { title:'การ์ดขอบคุณวันไหว้ครู', text:'ใกล้วันไหว้ครู คุณอยากเขียนการ์ดขอบคุณครูที่ประทับใจ แต่คิดคำไม่ออก เลยคิดจะให้ AI แต่งให้ทั้งหมดแล้วคัดลอกลงการ์ด', seed:'' },
+    { title:'เพื่อนบอกว่าใคร ๆ ก็ใช้ AI', text:'เพื่อนในห้องพูดในกลุ่มไลน์ว่า "ทุกคนก็ใช้ AI ทำการบ้านกันทั้งนั้น ไม่ถือว่าโกงหรอก" แล้วถกเถียงกันเรื่องนี้ต่อ', seed:'' },
+  ],
+  access: [
+    { title:'รายงานหัวข้อกว้างเกินไป', text:'ครูมอบหมายรายงานหัวข้อกว้าง ๆ ส่งในอีก 3 วัน พิมพ์ถาม AI ไปหลายครั้งแต่ได้คำตอบกว้างเกินไปไม่ตรงจุด', seed:'ค้นคว้าและสรุปข้อมูลหัวข้อที่ได้รับมอบหมาย เป็นหัวข้อย่อย 4-5 ข้อ' },
+    { title:'วันที่ประวัติศาสตร์ไม่ตรงกัน', text:'คุณต้องการวันที่และรายละเอียดเหตุการณ์ประวัติศาสตร์ที่แม่นยำ แต่ถาม AI หลายรอบกลับได้คำตอบไม่ตรงกันในแต่ละครั้ง', seed:'ขอวันที่และรายละเอียดสำคัญของเหตุการณ์ประวัติศาสตร์เรื่องหนึ่ง' },
+    { title:'ต้องการตารางข้อมูลทำโครงงาน', text:'คุณต้องการข้อมูลตัวเลขมาทำตาราง/กราฟสำหรับโครงงานวิทยาศาสตร์ แต่ AI ตอบเป็นย่อหน้ายาว ไม่ได้จัดเป็นตารางที่ใช้ได้เลย', seed:'' },
+    { title:'แบ่งหัวข้อค้นคว้ากับเพื่อนกลุ่ม', text:'กลุ่มแบ่งกันค้นคว้าคนละหัวข้อย่อยสำหรับรายงานเดียวกัน คุณต้องออกแบบพรอมต์ให้ได้ขอบเขตข้อมูลที่ไม่ซ้ำกับส่วนของเพื่อน', seed:'' },
+    { title:'หาหนังสืออ่านนอกเวลา', text:'ครูอยากให้แนะนำหนังสืออ่านนอกเวลาที่เหมาะกับวัย คุณอยากใช้ AI ช่วยแนะนำแต่ต้องระบุเงื่อนไขให้ชัดเจน', seed:'' },
+    { title:'จัดบรรณานุกรมรายงาน', text:'คุณต้องรวบรวมแหล่งอ้างอิงสำหรับรายงาน และอยากให้ AI ช่วยจัดรูปแบบบรรณานุกรมให้ถูกต้อง', seed:'' },
+    { title:'แปลย่อหน้าภาษาอังกฤษในหนังสือเรียน', text:'มีย่อหน้าภาษาอังกฤษในหนังสือเรียนที่อ่านไม่เข้าใจ อยากให้ AI ช่วยอธิบายเป็นภาษาไทยแบบเข้าใจง่าย', seed:'' },
+    { title:'ย่อบทความยาวก่อนสอบ', text:'มีบทความยาวมากที่ต้องอ่านก่อนสอบพรุ่งนี้ เวลาน้อย อยากให้ AI ช่วยย่อเป็นโน้ตอ่านสอบสั้น ๆ', seed:'' },
+    { title:'ตรวจคำตอบ AI กับหนังสือเรียน', text:'ได้คำตอบจาก AI มาแล้ว อยากเทียบกับเนื้อหาในหนังสือเรียนว่าครอบคลุมครบถ้วนหรือไม่ ก่อนนำไปทำสรุป', seed:'' },
+    { title:'วางแผนค้นคว้าหลายขั้นตอน', text:'โครงงานใหญ่ต้องค้นคว้าหลายประเด็นต่อเนื่องกัน คุณต้องวางแผนถามคำถามต่อ AI เป็นชุดหลายพรอมต์ให้ครอบคลุมทั้งหมด', seed:'' },
+  ],
+  analyze: [
+    { title:'สถิติที่ดูมั่นใจเกินไป', text:'AI ให้สถิติชุดหนึ่งมาสำหรับนำเสนอหน้าชั้น ตัวเลขดูมั่นใจมากแต่ไม่แน่ใจว่าถูกต้องจริง', seed:'อธิบายสถิติ/ข้อมูลเรื่องหนึ่งสำหรับใช้นำเสนอหน้าชั้น' },
+    { title:'ข้อมูลขัดกับหนังสือเรียน', text:'AI ตอบข้อเท็จจริงที่ดูขัดแย้งกับสิ่งที่หนังสือเรียนของคุณเขียนไว้ ต้องตัดสินใจว่าจะเชื่อฝ่ายไหน', seed:'' },
+    { title:'เทียบคำตอบสองแบบจาก AI', text:'คุณถามคำถามเดียวกันกับ AI สองครั้งแล้วได้คำตอบไม่เหมือนกัน ต้องพิจารณาว่าอันไหนน่าเชื่อถือกว่า', seed:'' },
+    { title:'จับอคติในบทความโน้มน้าวใจ', text:'AI เขียนบทความโน้มน้าวใจเรื่องหนึ่งให้ ดูน่าเชื่อถือมาก แต่คุณสงสัยว่าอาจมีการเลือกเสนอข้อมูลด้านเดียว', seed:'' },
+    { title:'ตรวจงานเพื่อนก่อนส่งกลุ่ม', text:'เพื่อนในกลุ่มใช้ AI ช่วยทำส่วนของตัวเองมา แล้วส่งมาให้คุณตรวจก่อนรวมเป็นรายงานกลุ่ม', seed:'' },
+    { title:'เว็บไซต์ที่ AI แนะนำน่าเชื่อถือไหม', text:'AI แนะนำเว็บไซต์แหล่งข้อมูลมาให้เพื่ออ้างอิงในรายงาน แต่คุณไม่เคยได้ยินชื่อเว็บนี้มาก่อน', seed:'' },
+    { title:'การอ้างอิงที่อาจไม่มีอยู่จริง', text:'AI ให้ชื่อหนังสือ/งานวิจัยมาอ้างอิงในรายงาน แต่คุณหาไม่เจอว่ามีอยู่จริงหรือไม่', seed:'' },
+    { title:'คำตอบมั่นใจแต่ขัดกับที่ครูสอน', text:'AI ตอบเรื่องหนึ่งด้วยน้ำเสียงมั่นใจมาก แต่เนื้อหาขัดกับสิ่งที่ครูเพิ่งสอนในห้องเมื่อวันก่อน', seed:'' },
+    { title:'ตรวจข่าวไวรัลก่อนแชร์ต่อ', text:'มีข่าว/คลิปที่กำลังไวรัลในโซเชียลของเพื่อน ๆ คุณอยากใช้ AI เป็นหนึ่งในเครื่องมือช่วยตรวจสอบก่อนเชื่อหรือแชร์ต่อ', seed:'' },
+    { title:'ตรวจโจทย์ข้อสอบที่ AI แต่งให้', text:'คุณให้ AI ช่วยแต่งข้อสอบปรนัยไว้ทบทวนก่อนสอบ ต้องตรวจสอบว่าโจทย์และเฉลยที่ AI แต่งถูกต้องจริงก่อนนำไปใช้อ่าน', seed:'' },
+  ],
+  participate: [
+    { title:'แบ่งงานกลุ่มที่ตกลงกันไม่ได้', text:'กลุ่มของคุณ 4 คนต้องทำงานพรีเซนต์ร่วมกัน แต่ยังตกลงกันไม่ได้ว่าใครทำส่วนไหน เพื่อนคนหนึ่งเสนอให้ใช้ AI ช่วยแบ่งงานให้เลย', seed:'ช่วยเสนอวิธีแบ่งงานให้สมาชิกกลุ่ม 4 คนอย่างเป็นธรรม' },
+    { title:'ไกล่เกลี่ยความเห็นต่างในกลุ่ม', text:'สมาชิกสองคนในกลุ่มมีความเห็นไม่ตรงกันเรื่องแนวทางทำงาน มีคนเสนอให้ถาม AI เพื่อช่วยหาทางประนีประนอม', seed:'' },
+    { title:'ร่างข้อความแจ้งกลุ่มไลน์', text:'ต้องแจ้งเปลี่ยนเวลานัดประชุมกลุ่มในไลน์ห้อง อยากให้ AI ช่วยร่างข้อความให้สุภาพและเข้าใจง่าย', seed:'' },
+    { title:'เพื่อนอยากให้ AI ทำงานคนเดียว', text:'เพื่อนในกลุ่มคนหนึ่งอยากใช้ AI ทำงานทั้งชิ้นคนเดียวโดยไม่ปรึกษาคนอื่นในกลุ่มเลย', seed:'' },
+    { title:'ให้ feedback งานเพื่อนอย่างสร้างสรรค์', text:'คุณต้องให้ข้อเสนอแนะกับงานร่างของเพื่อนในกลุ่ม อยากให้ AI ช่วยเรียบเรียงคำติชมให้ฟังดูสร้างสรรค์ไม่แรงเกินไป', seed:'' },
+    { title:'วางแผนกิจกรรมกับสภานักเรียน', text:'คุณเป็นตัวแทนห้องที่ต้องช่วยวางแผนกิจกรรมร่วมกับสภานักเรียน อยากให้ AI ช่วยระดมแผนงานเบื้องต้นก่อนคุยกับทีม', seed:'' },
+    { title:'สื่อสารกับเพื่อนแลกเปลี่ยนต่างชาติ', text:'มีเพื่อนนักเรียนแลกเปลี่ยนเข้าร่วมกลุ่ม ต้องอธิบายขั้นตอนงานเป็นภาษาอังกฤษ อยากให้ AI ช่วยแปล/อธิบาย', seed:'' },
+    { title:'แบ่งหน้าที่พรีเซนต์อย่างเป็นธรรม', text:'AI เสนอแผนว่าใครควรพรีเซนต์ส่วนไหน แต่ต้องตัดสินใจร่วมกับกลุ่มว่าจะเอาตามนี้หรือปรับเปลี่ยน', seed:'' },
+    { title:'สรุปแชทกลุ่มที่ยาวเกินไป', text:'แชทกลุ่มคุยกันมากจนตามไม่ทัน อยากให้ AI ช่วยสรุปประเด็นสำคัญให้ทุกคนเข้าใจตรงกัน', seed:'' },
+    { title:'ทางออกของ AI เอื้อประโยชน์ไม่เท่ากัน', text:'AI เสนอทางแก้ปัญหากลุ่มมาแบบหนึ่ง แต่ดูเหมือนจะเอื้อประโยชน์ให้สมาชิกบางคนมากกว่าคนอื่นอย่างไม่เป็นธรรม', seed:'' },
+  ],
+  create: [
+    { title:'ป้ายประชาสัมพันธ์ชุมนุม', text:'ชุมนุมของคุณจะจัดกิจกรรมในโรงเรียน ต้องการป้ายที่ดึงดูดเพื่อนให้มาร่วมงาน แต่ยังไม่รู้จะสื่อสารอย่างไรให้ตรงเป้าหมาย', seed:'ช่วยออกแบบเนื้อหาป้ายประชาสัมพันธ์กิจกรรมของชุมนุม' },
+    { title:'สคริปต์วิดีโอประกาศหน้าเสาธง', text:'ฝ่ายประชาสัมพันธ์โรงเรียนให้คุณเขียนสคริปต์วิดีโอสั้นประกาศกิจกรรมให้เพื่อนทั้งโรงเรียนดูตอนเข้าแถว', seed:'' },
+    { title:'แคปชันโซเชียลของโรงเรียน', text:'บัญชี Instagram ของโรงเรียนต้องการแคปชันโพสต์ภาพกิจกรรมล่าสุด ให้ดูน่าสนใจและเข้ากับวัยรุ่น', seed:'' },
+    { title:'สโลแกนเสื้อรุ่น', text:'เพื่อนร่วมชั้นกำลังออกแบบเสื้อรุ่น ต้องการสโลแกนที่สื่อถึงตัวตนของรุ่นได้ดี', seed:'' },
+    { title:'แนวคิดภาพสไลด์นำเสนอโครงงาน', text:'ต้องนำเสนอโครงงานวิทยาศาสตร์หน้าห้อง อยากได้แนวคิดภาพประกอบสไลด์ที่ช่วยให้เข้าใจง่ายและน่าสนใจ', seed:'' },
+    { title:'สคริปต์ประกาศเสียงตามสาย', text:'ฝ่ายประชาสัมพันธ์ให้เขียนสคริปต์ประกาศเสียงตามสายแจ้งข่าวกิจกรรมให้ทั้งโรงเรียนได้ยิน', seed:'' },
+    { title:'ข้อความในใบประกาศเกียรติคุณ', text:'ต้องออกแบบคำในใบประกาศเกียรติคุณสำหรับมอบให้ผู้ชนะกิจกรรมกีฬาสี ให้ฟังดูมีความหมายและเป็นทางการพอดี', seed:'' },
+    { title:'บทความลงจดหมายข่าวโรงเรียน', text:'จดหมายข่าวโรงเรียนต้องการบทความสั้นเล่าเรื่องกิจกรรมที่ผ่านมา ให้อ่านสนุกและได้ข้อมูลครบ', seed:'' },
+    { title:'คำอวยพรรุ่นพี่ที่จะจบการศึกษา', text:'ใกล้วันจบการศึกษา อยากเขียนข้อความอวยพรให้รุ่นพี่ที่ประทับใจ แต่คิดคำไม่ออก', seed:'' },
+    { title:'ข้อความรณรงค์ประจำเดือน', text:'โรงเรียนมีแคมเปญรณรงค์ประจำเดือนที่เปลี่ยนหัวข้อทุกเดือน เดือนนี้ต้องคิดข้อความรณรงค์ใหม่ให้เพื่อนจดจำง่าย', seed:'' },
+  ],
+};
+
+const DOMAINS = [
+  { key:'ethics', label:'จริยธรรม', icon:'🧭', color:'var(--pink)', rgba:'224,96,142',
+    wrap: p => `จงช่วยทำงานต่อไปนี้ให้เหมือนนักเรียนมัธยมต้นทำเอง เขียนให้อ่านเป็นธรรมชาติ ไม่ใช่ภาษาทางการเกินไป: ${p}`,
+    questions: [
+      'ถ้าส่งครูโดยไม่ปรับแก้เลย จะถือว่าเหมาะสมไหม เพราะอะไร',
+      'ถ้าใช้ AI ช่วยจริง ควรบอกครูหรือไม่ อย่างไร',
+      'การใช้ AI แบบนี้ ส่งผลดี-ผลเสียต่อการเรียนรู้ของตัวเองอย่างไร',
+      'ถ้าเพื่อนขอเอาคำตอบนี้ไปก็อปทั้งดุ้น จะแนะนำเพื่อนว่าอย่างไร'
+    ],
+    rubric: 'ฉันตัดสินใจและปฏิบัติอย่างรับผิดชอบ เป็นธรรมต่อตัวเองและผู้อื่น' },
+  { key:'access', label:'เข้าถึง/ใช้งาน', icon:'🔍', color:'var(--teal-dark)', rgba:'18,134,137',
+    wrap: p => `จงค้นคว้าและสรุปเรื่องต่อไปนี้เป็นหัวข้อย่อย สำหรับใช้ทำรายงาน: ${p}`,
+    questions: [
+      'ข้อมูลที่ได้ตรงกับสิ่งที่ต้องใช้ทำรายงานแค่ไหน',
+      'ถ้าจะปรับพรอมต์ให้ได้ข้อมูลตรงเป้าหมายมากขึ้น จะเพิ่มหรือตัดอะไร',
+      'ได้ข้อมูลมาแล้ว จะจัดการ/เรียบเรียงต่อให้เป็นรายงานของตัวเองอย่างไร',
+      'ถ้าต้องค้นคว้าหัวข้อนี้จากหลายแหล่ง จะออกแบบพรอมต์อย่างไรให้ครอบคลุมมากขึ้น'
+    ],
+    rubric: 'ฉันออกแบบพรอมต์ค้นคว้าให้ตรงเป้าหมายได้อย่างมีประสิทธิภาพ' },
+  { key:'analyze', label:'วิเคราะห์/ประเมิน', icon:'🕵️', color:'var(--success)', rgba:'39,156,107',
+    wrap: p => `จงอธิบายเรื่องต่อไปนี้ พร้อมยกตัวอย่างหรือสถิติประกอบ: ${p}`,
+    questions: [
+      'คำตอบนี้น่าจะมาจากไหน ใครเป็นผู้ให้ข้อมูล และมีจุดประสงค์อะไร',
+      'คำตอบนี้ถูกต้อง/น่าเชื่อถือหรือไม่ มีข้อผิดพลาดหรือคลาดเคลื่อนอย่างไรบ้าง',
+      'มีคำหรือประโยคใดที่ดูเหมือนอาการหลอนของ AI หรือไม่',
+      'ก่อนนำไปใช้ในรายงานจริง จะตรวจสอบข้อมูลนี้เพิ่มเติมด้วยวิธีใด'
+    ],
+    rubric: 'ฉันตั้งคำถามและตรวจสอบความน่าเชื่อถือของเนื้อหาที่ AI สร้างขึ้นก่อนนำไปใช้' },
+  { key:'participate', label:'มีส่วนร่วม', icon:'🤝', color:'var(--purple)', rgba:'124,111,224',
+    wrap: p => `ในฐานะที่ปรึกษาด้านการทำงานกลุ่มของนักเรียนมัธยมต้น จงเสนอวิธีแบ่งงานให้สมาชิกกลุ่ม 4 คนอย่างเป็นธรรมสำหรับงานต่อไปนี้ อธิบายบทบาทแต่ละคนแบบสั้นกระชับ: ${p}`,
+    questions: [
+      'AI แบ่งงานให้สมาชิกแต่ละคนอย่างไร คิดว่ายุติธรรมกับทุกคนไหม',
+      'ถ้าให้ AI แบ่งงานแทนการคุยตกลงกับเพื่อนจริงๆ จะขาดอะไรไป',
+      'อะไรที่ AI ช่วยได้ และอะไรที่ควรให้สมาชิกกลุ่มตัดสินใจร่วมกันเอง',
+      'ถ้าเพื่อนในกลุ่มไม่เห็นด้วยกับสิ่งที่ AI เสนอ ควรจัดการอย่างไร'
+    ],
+    rubric: 'ฉันใช้ AI สนับสนุนการทำงานร่วมกับผู้อื่น โดยไม่ให้มาแทนที่การพูดคุยตกลงกันในกลุ่ม' },
+  { key:'create', label:'สร้างสรรค์', icon:'🎨', color:'var(--teal)', rgba:'34,190,193',
+    wrap: p => `จงระดมไอเดีย 5-8 ข้อสำหรับหัวข้อต่อไปนี้ เขียนเป็นข้อ ๆ สั้นกระชับ เหมาะสำหรับนักเรียนมัธยมต้น: ${p}`,
+    questions: [
+      'เป้าหมายการสื่อสารของชิ้นงานนี้คืออะไร กลุ่มเป้าหมายคือใคร',
+      'รูปแบบที่ AI เสนอ เหมาะกับเป้าหมายนี้ไหม เพราะอะไร',
+      'จะปรับแก้ไอเดียของ AI ให้เป็นสไตล์ของตัวเองอย่างไร',
+      'ถ้าต้องนำเสนอให้กลุ่มเป้าหมายที่ต่างออกไป จะปรับเนื้อหาอย่างไร'
+    ],
+    rubric: 'ฉันระบุเป้าหมายการสื่อสารและเลือกเนื้อหา/รูปแบบที่เหมาะกับกลุ่มเป้าหมาย' },
+];
+
+function buildLevels(domain){
+  return SCENARIO_SETS[domain.key].map((sc, i)=>{
+    const levelNum = i+1;
+    const tier = levelNum<=3 ? 'easy' : (levelNum<=7 ? 'medium' : 'hard');
+    const numQ = tier==='easy' ? 1 : (tier==='medium' ? 2 : 3);
+    return {
+      levelNum, tier,
+      title: sc.title,
+      scenario: sc.text,
+      seedPrompt: sc.seed || '',
+      questions: domain.questions.slice(0, numQ),
+    };
+  });
+}
+const LEVELS = {};
+DOMAINS.forEach(d => LEVELS[d.key] = buildLevels(d));
+
+let progress = { ethics:0, access:0, analyze:0, participate:0, create:0 };
+let activeDomain = 'ethics';
+let activeLevel = null;
+
+function domainOf(key){ return DOMAINS.find(d=>d.key===key); }
+
+function renderDomainTabs(){
+  const wrap = document.getElementById('domainTabs');
+  wrap.innerHTML = DOMAINS.map(d=>{
+    const done = progress[d.key];
+    return `<button type="button" class="domain-tab ${activeDomain===d.key?'active':''}" onclick="selectDomain('${d.key}')" title="${d.label}">
+      <span class="dt-icon">${d.icon}</span><span class="dt-text">${d.label} <span class="dt-count">${done}/10</span></span>
+    </button>`;
+  }).join('');
+  const totalDone = DOMAINS.reduce((sum,d)=>sum+progress[d.key],0);
+  document.getElementById('domainProgress').innerHTML = `
+    <div>ความก้าวหน้ารวม: ${totalDone}/50 ด่าน</div>
+    <div class="domain-progress-bar"><div class="domain-progress-fill" style="width:${totalDone*2}%;"></div></div>
+  `;
+}
+
+function selectDomain(key){
+  activeDomain = key;
+  activeLevel = null;
+  document.getElementById('levelPanel').classList.remove('show');
+  document.getElementById('levelPanel').innerHTML = '';
+  renderDomainTabs();
+  renderLevelPath();
+}
+
+function renderLevelPath(){
+  const d = domainOf(activeDomain);
+  const wrap = document.getElementById('levelPathWrap');
+  wrap.innerHTML = LEVELS[d.key].map(lv=>{
+    const done = lv.levelNum <= progress[d.key];
+    const unlocked = lv.levelNum <= progress[d.key]+1;
+    const isActive = activeLevel===lv.levelNum;
+    const cls = done ? 'completed' : (unlocked ? 'unlocked' : 'locked');
+    return `<div class="level-node ${cls} ${isActive?'active':''}" onclick="${unlocked? `openLevel('${d.key}', ${lv.levelNum})` : ''}">
+      <div class="circle">${done ? '✓' : lv.levelNum}</div>
+    </div>`;
+  }).join('');
+}
+
+function openLevel(domainKey, levelNum){
+  const d = domainOf(domainKey);
+  const lv = LEVELS[domainKey][levelNum-1];
+  activeDomain = domainKey;
+  activeLevel = levelNum;
+  renderDomainTabs();
+  renderLevelPath();
+
+  const panel = document.getElementById('levelPanel');
+  const guideHint = lv.tier==='easy'
+    ? 'ด่านนี้มีตัวอย่างพรอมต์ให้แล้ว ลองทดสอบดูได้เลย'
+    : (lv.tier==='medium' ? 'ด่านนี้ให้หัวข้อมา แต่ต้องเขียนพรอมต์เองทั้งหมด' : 'คิดสถานการณ์ต่อและเขียนพรอมต์เองทั้งหมด ไม่มีตัวอย่างให้');
+
+  panel.innerHTML = `
+    <div class="mission-card">
+      <div class="mission-head">
+        <div class="mission-head-left">
+          <div class="stage-num" style="background:${d.color}; color:#fff;">${levelNum}</div>
+          <div>
+            <h3>${d.icon} ${d.label} · ด่านที่ ${levelNum}/10</h3>
+            <div style="margin-top:8px;">
+              <span class="ctxbadge"><span class="ic">📚</span>${lv.title}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="scenario-box show" style="border-style:solid;">
+        <span class="scn-icon">${d.icon}</span>
+        <div><span class="assess-tag" style="color:${d.color}; border-color:rgba(${d.rgba},0.3); background:rgba(${d.rgba},0.1);">สถานการณ์ประเมิน · ${d.label}</span><p>${lv.scenario}</p></div>
+      </div>
+      <div class="hint" style="display:block; margin:8px 0 12px;">${guideHint}</div>
+      <div class="slot">
+        <label>เขียนพรอมต์ของคุณ</label>
+        <textarea id="lvl-prompt" rows="2" placeholder="เขียนพรอมต์เพื่อรับมือกับสถานการณ์ข้างต้น...">${lv.seedPrompt}</textarea>
+      </div>
+      <div class="cast-row">
+        <button class="btn-primary" onclick="castLevel()">ทดสอบพรอมต์นี้</button>
+      </div>
+      <div class="result-card" id="lvl-resultCard">
+        <div class="result-head">ผลลัพธ์จาก AI</div>
+        <div class="result-text" id="lvl-resultText"></div>
+        <div class="reflect-grid" id="lvl-reflectGrid">
+          ${lv.questions.map((q,i)=>`<div class="reflect-item"><label>${q}</label><textarea id="lvl-q${i}"></textarea></div>`).join('')}
+        </div>
+        <div class="rubric">
+          <div class="rubric-title">แบบประเมินตนเอง</div>
+          <div class="rubric-item"><input type="checkbox" id="lvl-r0"><label for="lvl-r0">${d.rubric}</label></div>
+        </div>
+        <div class="save-row">
+          <button class="btn-secondary" onclick="completeLevel()">ผ่านด่านนี้ ✓</button>
+        </div>
+      </div>
+    </div>
+  `;
+  panel.classList.add('show');
+  panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+async function castLevel(){
+  const promptEl = document.getElementById('lvl-prompt');
+  const promptText = promptEl.value.trim();
+  if(!promptText){ alert('เขียนพรอมต์ก่อนนะ'); return; }
+  const d = domainOf(activeDomain);
+  const wrapped = d.wrap(promptText);
+
+  const card = document.getElementById('lvl-resultCard');
+  card.classList.add('show');
+  const rt = document.getElementById('lvl-resultText');
+  rt.innerHTML = '<div class="loading-line"><div class="spinner"></div>AI กำลังประมวลผลคำตอบ...</div>';
+
+  try{
+    const text = await callClaude([{role:'user', content:wrapped}]);
+    rt.textContent = text;
+    card.dataset.prompt = wrapped;
+    card.dataset.reply = text;
+  }catch(e){
+    rt.textContent = e.message || 'เกิดข้อผิดพลาด ลองใหม่อีกครั้ง';
+  }
+}
+
+function completeLevel(){
+  const card = document.getElementById('lvl-resultCard');
+  const prompt = card.dataset.prompt || '';
+  const reply = card.dataset.reply || '';
+  if(!prompt || !reply){ alert('ยังไม่มีผลลัพธ์ให้บันทึก'); return; }
+
+  const d = domainOf(activeDomain);
+  const lv = LEVELS[activeDomain][activeLevel-1];
+  const answers = lv.questions.map((q,i)=>document.getElementById('lvl-q'+i).value || '-');
+  const rubricChecked = document.getElementById('lvl-r0').checked ? '1/1' : '0/1';
+
+  journal.push({
+    tag: `${d.icon} ${d.label} · ด่าน ${activeLevel}/10 (${lv.tierLabel})`,
+    prompt, reply, rating:'-',
+    note: lv.questions.map((q,i)=>`${q}: ${answers[i]}`).join(' | ') + ` | แบบประเมินตนเอง: ${rubricChecked}`
+  });
+
+  if(activeLevel > progress[activeDomain]) progress[activeDomain] = activeLevel;
+  refreshJournal();
+  renderDomainTabs();
+  renderLevelPath();
+  alert(`ผ่านด่านที่ ${activeLevel} แล้ว ✓`);
+
+  if(activeLevel < 10){
+    openLevel(activeDomain, activeLevel+1 <= progress[activeDomain]+1 ? activeLevel+1 : activeLevel);
+  }
+}
+
+renderDomainTabs();
+renderLevelPath();
+
+// ---------- techniques tab: 5 acronym techniques mapped to the 5 MAIL domains ----------
+const TECHNIQUES = [
+  { key:'care', domainKey:'ethics', acronym:'CARE',
+    letters:[
+      {L:'C', word:'Check', thai:'ตรวจสอบเป้าหมาย ใช้ AI ทำไม จำเป็นแค่ไหน'},
+      {L:'A', word:'Acknowledge', thai:'บอกให้คนที่เกี่ยวข้องรู้ว่าใช้ AI ช่วย'},
+      {L:'R', word:'Respect', thai:'เคารพ คำนึงถึงผลกระทบต่อผู้อื่นและสังคม'},
+      {L:'E', word:'Evaluate', thai:'ประเมินผลลัพธ์ก่อนนำไปใช้จริง'},
+    ],
+    desc:'ใช้เทคนิคนี้ทุกครั้งก่อนให้ AI ช่วยทำงานสำคัญ เช่น การบ้านหรือรายงานที่ต้องส่งครู เพราะถ้าใช้ AI แบบไม่คิดหน้าคิดหลัง อาจทำให้เสียโอกาสเรียนรู้ของตัวเอง หรือทำให้คนอื่นเข้าใจผิดว่าเป็นฝีมือเราทั้งหมด',
+    weak:'ช่วยเขียนการบ้านวิชาวิทยาศาสตร์เรื่องระบบนิเวศให้หน่อย',
+    strong:'ช่วยอธิบายเรื่องระบบนิเวศแบบเข้าใจง่าย เพื่อให้ฉันเอาไปเรียบเรียงเป็นการบ้านด้วยคำพูดของตัวเอง ไม่ใช่คัดลอกทั้งหมด' },
+  { key:'race', domainKey:'access', acronym:'RACE',
+    letters:[
+      {L:'R', word:'Role', thai:'บทบาท อยากให้ AI สวมบทบาทอะไร'},
+      {L:'A', word:'Action', thai:'การกระทำ สิ่งที่ต้องการให้ทำคืออะไร'},
+      {L:'C', word:'Context', thai:'บริบท รายละเอียดประกอบที่ควรรู้'},
+      {L:'E', word:'Example', thai:'ตัวอย่าง รูปแบบผลลัพธ์ที่ต้องการ'},
+    ],
+    desc:'ใช้เทคนิคนี้เวลาพิมพ์คำถามไปแล้ว AI ตอบไม่ตรงกับที่ต้องการหรือกว้างเกินไป เพราะยิ่งบอก AI ชัดเจนว่าใครทำ ทำอะไร ในบริบทไหน อยากได้แบบไหน คำตอบก็จะยิ่งตรงใจและประหยัดเวลามากขึ้น',
+    weak:'ช่วยอธิบายเรื่องระบบสุริยะหน่อย',
+    strong:'ในฐานะครูวิทยาศาสตร์ (Role) ช่วยอธิบายเรื่องระบบสุริยะ (Action) ให้นักเรียน ม.1 ที่ยังไม่เคยเรียนมาก่อน (Context) แบบมีตัวอย่างเปรียบเทียบง่าย ๆ ประกอบ (Example)' },
+  { key:'sift', domainKey:'analyze', acronym:'SIFT',
+    letters:[
+      {L:'S', word:'Stop', thai:'หยุด อย่าเพิ่งเชื่อทันทีที่เห็นคำตอบ'},
+      {L:'I', word:'Investigate', thai:'สืบ ตรวจสอบว่าใครเป็นผู้ให้ข้อมูลนี้'},
+      {L:'F', word:'Find', thai:'หา ค้นแหล่งอื่นมาเทียบเคียง'},
+      {L:'T', word:'Trace', thai:'ย้อนดู สืบย้อนข้อเท็จจริง/หลักฐานต้นตอ'},
+    ],
+    desc:'ใช้เทคนิคนี้ทุกครั้งก่อนนำคำตอบจาก AI ไปใช้จริง โดยเฉพาะข้อมูลที่จะเอาไปทำรายงานหรือพูดต่อให้คนอื่นฟัง เพราะ AI อาจตอบผิดแบบมั่นใจสุด ๆ โดยที่เราไม่ทันรู้ตัว การหยุดคิดและตรวจสอบก่อนจะช่วยไม่ให้เผยแพร่ข้อมูลผิด ๆ ต่อ',
+    weak:'สถิติเรื่องปัญหาสิ่งแวดล้อมในไทยเป็นยังไงบ้าง',
+    strong:'ช่วยบอกสถิติปัญหาสิ่งแวดล้อมในไทย พร้อมระบุว่าข้อมูลนี้น่าจะมาจากแหล่งประเภทไหน และมีอะไรที่ควรตรวจสอบเพิ่มก่อนเชื่อ' },
+  { key:'team', domainKey:'participate', acronym:'TEAM',
+    letters:[
+      {L:'T', word:'Talk', thai:'คุยก่อน ปรึกษาตกลงกับเพื่อนก่อนใช้ AI'},
+      {L:'E', word:'Explain', thai:'อธิบาย บอกเพื่อนว่า AI ช่วยส่วนไหนบ้าง'},
+      {L:'A', word:'Agree', thai:'ตกลง หาข้อสรุปร่วมกันในกลุ่ม'},
+      {L:'M', word:'Merge', thai:'รวมงาน ผสานผลงานทุกคนอย่างเป็นธรรม'},
+    ],
+    desc:'ใช้เทคนิคนี้เวลาทำงานกลุ่มที่มีเพื่อนร่วมงานด้วย เพราะ AI ควรเป็นตัวช่วยให้ทีมทำงานง่ายขึ้น ไม่ใช่มาแทนที่การพูดคุยตกลงกันของเพื่อนในกลุ่ม ถ้าให้ AI ตัดสินใจแทนทุกอย่างโดยไม่ปรึกษาใคร เพื่อนอาจรู้สึกไม่ได้มีส่วนร่วม',
+    weak:'ช่วยแบ่งงานกลุ่ม 4 คนให้หน่อย',
+    strong:'ช่วยเสนอวิธีแบ่งงานกลุ่ม 4 คนสำหรับทำโปสเตอร์วิทยาศาสตร์ โดยแบ่งบทบาทตามความถนัดที่หลากหลาย เพื่อให้กลุ่มเอาไปคุยตกลงกันอีกที ไม่ใช่คำตอบสุดท้าย' },
+  { key:'spark', domainKey:'create', acronym:'SPARK',
+    letters:[
+      {L:'S', word:'Style', thai:'สไตล์ โทนหรือรูปแบบที่ต้องการ'},
+      {L:'P', word:'Purpose', thai:'จุดประสงค์ ต้องการสื่อสารอะไร'},
+      {L:'A', word:'Audience', thai:'กลุ่มเป้าหมาย ใครจะเป็นคนดู/อ่าน'},
+      {L:'R', word:'Refine', thai:'ขัดเกลา ปรับแก้ผลลัพธ์ให้ดีขึ้น'},
+      {L:'K', word:'Keep it yours', thai:'ทำให้เป็นของตัวเอง ไม่ใช่แค่คัดลอก'},
+    ],
+    desc:'ใช้เทคนิคนี้เวลาต้องสร้างชิ้นงานที่จะให้คนอื่นดูหรืออ่าน เช่น โปสเตอร์ คำโฆษณา หรือสไลด์นำเสนอ เพราะงานสร้างสรรค์ที่ดีต้องรู้ว่าทำไปเพื่ออะไรและใครจะเป็นคนดู ไม่ใช่แค่ก๊อปคำตอบจาก AI มาใช้ทั้งดุ้นโดยไม่ปรับให้เป็นสไตล์ของตัวเอง',
+    weak:'ช่วยออกแบบป้ายประชาสัมพันธ์ชุมนุมดนตรีให้หน่อย',
+    strong:'ช่วยออกแบบป้ายประชาสัมพันธ์ชุมนุมดนตรี โทนสนุกสนานดึงดูดวัยรุ่น (Style) เป้าหมายคือชวนเพื่อนมาสมัครเข้าชุมนุม (Purpose) กลุ่มเป้าหมายคือนักเรียน ม.ต้น (Audience) ขอ 3 แบบให้เลือกเปรียบเทียบ (Refine)' },
+];
+let activeTechnique = TECHNIQUES[0].key;
+
+function renderTechTabs(){
+  const wrap = document.getElementById('techTabs');
+  if(!wrap) return;
+  wrap.innerHTML = TECHNIQUES.map(t=>{
+    const d = domainOf(t.domainKey);
+    return `<button type="button" class="tech-tab-btn ${activeTechnique===t.key?'active':''}" onclick="selectTechnique('${t.key}')">
+      <span>${d.icon}</span>${t.acronym}
+    </button>`;
+  }).join('');
+}
+
+function selectTechnique(key){
+  activeTechnique = key;
+  renderTechTabs();
+  const t = TECHNIQUES.find(x=>x.key===key);
+  const d = domainOf(t.domainKey);
+  const panel = document.getElementById('techPanel');
+  panel.innerHTML = `
+    <div class="acronym-head">
+      <div class="acronym-big" style="color:${d.color};">${t.acronym}</div>
+      <span class="ctxbadge"><span class="ic">${d.icon}</span>${d.label}</span>
+    </div>
+    <div class="acronym-letters">
+      ${t.letters.map(l=>`
+        <div class="acronym-letter">
+          <div class="al-badge" style="background:${d.color};">${l.L}</div>
+          <div><b>${l.word}</b><span>${l.thai}</span></div>
+        </div>`).join('')}
+    </div>
+    <p class="mission-desc" style="text-align:center; max-width:560px; margin:14px auto 18px;">${t.desc}</p>
+    <div class="compare-grid">
+      <div class="compare-col weak">
+        <div class="compare-col-label">❌ พรอมต์อ่อน</div>
+        <textarea id="tech-weak-prompt" rows="3">${t.weak}</textarea>
+        <div class="cast-row" style="margin-top:10px;">
+          <button class="btn-secondary" onclick="castTech('weak')">ทดสอบฝั่งนี้</button>
+        </div>
+        <div class="compare-result" id="tech-weak-result">ผลลัพธ์จะแสดงที่นี่</div>
+      </div>
+      <div class="compare-col strong">
+        <div class="compare-col-label">✅ ใช้เทคนิค ${t.acronym}</div>
+        <textarea id="tech-strong-prompt" rows="3">${t.strong}</textarea>
+        <div class="cast-row" style="margin-top:10px;">
+          <button class="btn-primary" onclick="castTech('strong')">ทดสอบฝั่งนี้</button>
+        </div>
+        <div class="compare-result" id="tech-strong-result">ผลลัพธ์จะแสดงที่นี่</div>
+      </div>
+    </div>
+    <div class="reflect-grid" style="margin-top:18px;">
+      <div class="reflect-item">
+        <label>สังเกตความต่างระหว่างสองฝั่งอะไรบ้าง จะนำเทคนิค ${t.acronym} ไปใช้ตอนไหน</label>
+        <textarea id="tech-q1"></textarea>
+      </div>
+    </div>
+    <div class="save-row">
+      <button class="btn-secondary" onclick="saveTechCompare()">บันทึกข้อสังเกตนี้</button>
+    </div>
+  `;
+}
+
+async function castTech(side){
+  const promptEl = document.getElementById('tech-'+side+'-prompt');
+  const promptText = promptEl.value.trim();
+  if(!promptText){ alert('เขียนพรอมต์ก่อนนะ'); return; }
+  const resultEl = document.getElementById('tech-'+side+'-result');
+  resultEl.innerHTML = '<div class="loading-line"><div class="spinner"></div>AI กำลังประมวลผล...</div>';
+  try{
+    const text = await callClaude([{role:'user', content:promptText}]);
+    resultEl.textContent = text;
+    resultEl.dataset.prompt = promptText;
+    resultEl.dataset.reply = text;
+  }catch(e){
+    resultEl.textContent = e.message || 'เกิดข้อผิดพลาด ลองใหม่อีกครั้ง';
+  }
+}
+
+function saveTechCompare(){
+  const t = TECHNIQUES.find(x=>x.key===activeTechnique);
+  const weakEl = document.getElementById('tech-weak-result');
+  const strongEl = document.getElementById('tech-strong-result');
+  const q1 = document.getElementById('tech-q1').value;
+  if(!weakEl.dataset.reply && !strongEl.dataset.reply){ alert('ลองทดสอบอย่างน้อย 1 ฝั่งก่อนบันทึก'); return; }
+  journal.push({
+    tag: `เทคนิค ${t.acronym}`,
+    prompt: `อ่อน: ${weakEl.dataset.prompt||'-'}\nใช้เทคนิค: ${strongEl.dataset.prompt||'-'}`,
+    reply: `อ่อน: ${weakEl.dataset.reply||'(ยังไม่ทดสอบ)'}\n\nใช้เทคนิค: ${strongEl.dataset.reply||'(ยังไม่ทดสอบ)'}`,
+    rating:'-',
+    note:`ข้อสังเกต: ${q1||'-'}`
+  });
+  refreshJournal();
+  alert('บันทึกแล้ว ✓');
+}
+
+renderTechTabs();
+selectTechnique(activeTechnique);
+
+// ---------- journal drawer & mastery meter ----------
+function openDrawer(){
+  document.getElementById('journalDrawer').classList.add('show');
+  document.getElementById('drawerOverlay').classList.add('show');
+}
+function closeDrawer(){
+  document.getElementById('journalDrawer').classList.remove('show');
+  document.getElementById('drawerOverlay').classList.remove('show');
+}
+function updateMastery(){
+  const n = journal.length;
+  let pct = Math.min(100, n*12);
+  document.getElementById('meterFill').style.width = pct+'%';
+  const pill = document.getElementById('masteryPill');
+  const l1 = document.getElementById('lvl1'), l2 = document.getElementById('lvl2'), l3 = document.getElementById('lvl3');
+  [l1,l2,l3].forEach(l=>l.classList.remove('on'));
+  if(n>=8){ pill.innerHTML = '🏆 Prompt Master'; l1.classList.add('on'); l2.classList.add('on'); l3.classList.add('on'); }
+  else if(n>=3){ pill.innerHTML = '⚡ ผู้ฝึกฝน'; l1.classList.add('on'); l2.classList.add('on'); }
+  else { pill.innerHTML = '🔰 มือใหม่'; l1.classList.add('on'); }
+}
+function refreshJournal(){
+  document.getElementById('journalCount').textContent = journal.length;
+  updateMastery();
+  const list = document.getElementById('journalList');
+  if(journal.length===0){
+    list.innerHTML = '<div class="empty-journal">ยังไม่มีบันทึก — ลองไปทดสอบพรอมต์ในห้องฝึกหรือทำด่านฝึกฝนดูสิ!</div>';
+    return;
+  }
+  list.innerHTML = journal.map(j=>`
+    <div class="journal-entry">
+      <div class="je-top"><span class="je-tag">${j.tag}</span><span style="font-size:11px; color:var(--faint);">${j.rating!=='-'?('ให้คะแนน: '+j.rating):''}</span></div>
+      <div class="je-prompt">${j.prompt}</div>
+      <div class="je-note">${j.note ? j.note : (j.reply.length>140? j.reply.slice(0,140)+'…' : j.reply)}</div>
+    </div>
+  `).join('');
+}
+refreshJournal();
+updatePreview();
+renderContextSelect();
+</script>
+</body>
+</html>
